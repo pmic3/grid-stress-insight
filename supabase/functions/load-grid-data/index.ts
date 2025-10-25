@@ -11,11 +11,11 @@ let cachedGeojson: any = null;
 async function loadGeojson() {
   if (cachedGeojson) return cachedGeojson;
 
-  const baseUrl = 'https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/data/hawaii_40bus/';
+  const GITHUB_BASE = 'https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/gis/';
   
   console.log('Loading GeoJSON from GitHub...');
   
-  const geojsonRes = await fetch(`${baseUrl}oneline_lines.geojson`);
+  const geojsonRes = await fetch(`${GITHUB_BASE}oneline_lines.geojson`);
 
   if (!geojsonRes.ok) {
     throw new Error('Failed to fetch GeoJSON file');

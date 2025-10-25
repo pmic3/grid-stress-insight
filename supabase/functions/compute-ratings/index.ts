@@ -139,12 +139,12 @@ let cachedGridData: any = null;
 async function loadGridData() {
   if (cachedGridData) return cachedGridData;
 
-  const baseUrl = 'https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/data/hawaii_40bus/';
+  const GITHUB_BASE = 'https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/';
   
   const [linesRes, flowsRes, geojsonRes] = await Promise.all([
-    fetch(`${baseUrl}lines.csv`),
-    fetch(`${baseUrl}line_flows_nominal.csv`),
-    fetch(`${baseUrl}oneline_lines.geojson`)
+    fetch(`${GITHUB_BASE}csv/lines.csv`),
+    fetch(`${GITHUB_BASE}line_flows_nominal.csv`),
+    fetch(`${GITHUB_BASE}gis/oneline_lines.geojson`)
   ]);
 
   if (!linesRes.ok || !flowsRes.ok || !geojsonRes.ok) {
