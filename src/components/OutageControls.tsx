@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Scissors, RotateCcw, AlertCircle } from 'lucide-react';
+import { Unplug, RotateCcw, AlertCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
@@ -23,7 +23,7 @@ const OutageControls = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Scissors className="w-5 h-5 text-primary" />
+            <Unplug className="w-5 h-5 text-primary" />
             Outage Simulation
           </h3>
           {cutLinesCount > 0 && (
