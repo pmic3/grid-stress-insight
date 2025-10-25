@@ -26,14 +26,18 @@ async function loadBuses() {
 
   console.log("Loading buses and lines data...");
   
-  // Load buses
-  const busesPath = new URL('../_shared/data/buses.csv', import.meta.url).pathname;
-  const busesText = await Deno.readTextFile(busesPath);
+  // Load from GitHub (avoid filesystem bundling issues)
+  const GITHUB_BASE = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/csv/";
+
+  const busesRes = await fetch(`${GITHUB_BASE}buses.csv`);
+  if (!busesRes.ok) throw new Error("Failed to fetch buses.csv");
+  const busesText = await busesRes.text();
   const busesData = parseCSV(busesText);
   
   // Load lines to compute degree (number of connected lines per bus)
-  const linesPath = new URL('../_shared/data/lines.csv', import.meta.url).pathname;
-  const linesText = await Deno.readTextFile(linesPath);
+  const linesRes = await fetch(`${GITHUB_BASE}lines.csv`);
+  if (!linesRes.ok) throw new Error("Failed to fetch lines.csv");
+  const linesText = await linesRes.text();
   const linesData = parseCSV(linesText);
   
   // Count connections per bus
