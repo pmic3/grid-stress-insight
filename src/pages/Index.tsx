@@ -299,8 +299,11 @@ const Index = () => {
   }, [lines, stats, cutLinesSet, outageSimulator, baseStress]);
 
   const handleLineClick = (line: any) => {
+    console.log('handleLineClick called:', { lineId: line.id, outageMode });
+    
     // If in outage mode, toggle line cut status
     if (outageMode) {
+      console.log('Outage mode active, toggling line:', line.id);
       setCutLines(prev => {
         const isCut = prev.includes(line.id);
         if (isCut) {
@@ -321,6 +324,7 @@ const Index = () => {
       return;
     }
 
+    console.log('Normal mode, showing line details');
     // Normal line selection for details
     setSelectedLine({
       name: line.name,

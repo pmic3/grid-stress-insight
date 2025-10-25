@@ -83,7 +83,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
     console.log('Updating map lines:', lines.length);
     console.log('Sample line stress values:', lines.slice(0, 3).map(l => ({ id: l.id, stress: l.stress })));
 
-    // Remove existing layers and sources
+    // Remove existing layers and sources (handlers are automatically removed)
     if (map.current.getLayer('transmission-lines')) {
       map.current.removeLayer('transmission-lines');
     }
@@ -150,12 +150,13 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
       },
     });
 
-    // Add click handler
+    // Add click handler (fresh closure with current props)
     map.current.on('click', 'transmission-lines', (e) => {
       if (e.features && e.features[0] && onLineClick) {
         const feature = e.features[0];
         const lineData = lines.find(l => l.id === feature.properties?.id);
         if (lineData) {
+          console.log('Line clicked:', lineData.id, 'Outage mode:', outageMode);
           onLineClick(lineData);
         }
       }
@@ -292,8 +293,8 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
     if (map.current && map.current.isStyleLoaded()) {
       updateMapLines();
       
-      // Fit map to bounds of all lines on first load
-      if (lines.length > 0) {
+      // Fit map to bounds of all lines on first load (only on initial lines load)
+      if (lines.length > 0 && !map.current.getSource('lines')) {
         const bounds = new mapboxgl.LngLatBounds();
         lines.forEach(line => {
           if (line.geometry && line.geometry.coordinates) {
@@ -311,7 +312,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
         }
       }
     }
-  }, [lines]);
+  }, [lines, onLineClick]); // Added onLineClick dependency to recreate handlers
 
   useEffect(() => {
     if (map.current && buses && buses.length > 0) {
