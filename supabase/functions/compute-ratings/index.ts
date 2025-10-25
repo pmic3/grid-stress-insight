@@ -59,22 +59,25 @@ function ieee738Ampacity(
   const windAngleFactor = Math.sin(attackDeg * Math.PI / 180);
   const effectiveWind = windMS * (windAngleFactor > 0.2 ? windAngleFactor : 0.2);
   
-  // Convection cooling (simplified)
+  // Convection cooling (W/m, simplified)
   const diameterM = conductor.diameter / 1000;
   const convectionCooling = 0.0119 * airDensity ** 0.6 * effectiveWind ** 0.6 * diameterM ** 0.4 * (motC - tempC);
   
-  // Radiation cooling (simplified)
+  // Radiation cooling (W/m, simplified)
   const stefanBoltzmann = 5.67e-8;
   const tempKelvin = tempC + 273.15;
   const motKelvin = motC + 273.15;
   const radiationCooling = stefanBoltzmann * conductor.emissivity * Math.PI * diameterM * 
     ((motKelvin ** 4) - (tempKelvin ** 4));
   
-  // Total cooling
-  const totalCooling = convectionCooling + radiationCooling;
+  // Total cooling per meter (W/m)
+  const totalCoolingPerMeter = convectionCooling + radiationCooling;
+  
+  // Convert to cooling per km to match resistance units (ohms/km)
+  const totalCoolingPerKm = totalCoolingPerMeter * 1000;
   
   // Current rating (I²R heating = cooling)
-  const currentSquared = totalCooling / conductor.resistance;
+  const currentSquared = totalCoolingPerKm / conductor.resistance;
   return Math.sqrt(Math.max(0, currentSquared));
 }
 
