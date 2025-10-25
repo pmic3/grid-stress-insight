@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import Map from '@/components/Map';
 import ControlPanel from '@/components/ControlPanel';
 import StatsPanel from '@/components/StatsPanel';
-import BusDetailsDrawer from '@/components/BusDetailsDrawer';
-import ContingencyPanel from '@/components/ContingencyPanel';
 import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -77,28 +75,25 @@ const Index = () => {
   const [windDirection, setWindDirection] = useState(90);
   const [scenario, setScenario] = useState<'min' | 'nominal' | 'max'>('nominal');
   const [lines, setLines] = useState(mockLines);
-  const [buses, setBuses] = useState<any[]>([]);
   const [stats, setStats] = useState(mockStats);
   const [selectedLine, setSelectedLine] = useState<any>(null);
-  const [selectedBus, setSelectedBus] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [contingencyOutage, setContingencyOutage] = useState<string | null>(null);
-  const [contingencyIssues, setContingencyIssues] = useState<any[]>([]);
   const { toast } = useToast();
 
-  // Load GeoJSON and buses on mount
+  // Load GeoJSON on mount
   useEffect(() => {
-    const loadData = async () => {
+    const loadGeojson = async () => {
       try {
-        // Load lines
-        const { data: linesData, error: linesError } = await supabase.functions.invoke('load-grid-data');
-        if (linesError) throw linesError;
+        const { data, error } = await supabase.functions.invoke('load-grid-data');
+        if (error) throw error;
 
-        if (linesData?.geojson) {
-          const features = linesData.geojson.features.filter(
+        if (data?.geojson) {
+          // Store geojson features with geometries
+          const features = data.geojson.features.filter(
             (f: any) => f.geometry && f.properties.id
           );
           
+          // Initialize lines with default stress values
           const initialLines = features.map((f: any) => ({
             id: f.properties.id,
             name: f.properties.LineName,
@@ -110,32 +105,17 @@ const Index = () => {
           
           setLines(initialLines);
         }
-
-        // Load buses
-        const { data: busesData, error: busesError } = await supabase.functions.invoke('buses');
-        if (busesError) {
-          console.error('Bus loading error:', busesError);
-          throw busesError;
-        }
-
-        if (busesData?.buses) {
-          console.log('Bus data received:', busesData.buses.length, 'buses');
-          console.log('Sample bus:', busesData.buses[0]);
-          setBuses(busesData.buses);
-        } else {
-          console.warn('No buses data in response');
-        }
       } catch (error) {
         console.error('Error loading grid data:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load grid data.',
+          description: 'Failed to load grid geometry.',
           variant: 'destructive',
         });
       }
     };
 
-    loadData();
+    loadGeojson();
   }, []);
 
   // Fetch and compute ratings when environmental params change
@@ -157,12 +137,6 @@ const Index = () => {
         if (error) throw error;
 
         if (data && data.lines) {
-          console.log('Compute ratings response:', {
-            lineCount: data.lines.length,
-            sampleLine: data.lines[0],
-            sampleStress: data.lines[0]?.stressPct
-          });
-          
           // Build stress map by line id
           const stressById: Record<string, any> = {};
           data.lines.forEach((line: any) => {
@@ -175,23 +149,15 @@ const Index = () => {
           });
 
           // Update lines with new stress values
-          setLines(prevLines => {
-            const updated = prevLines.map(line => ({
+          setLines(prevLines =>
+            prevLines.map(line => ({
               ...line,
               stress: stressById[line.id]?.stress || 0,
               rating: stressById[line.id]?.rating || 0,
               actual: stressById[line.id]?.actual || 0,
               overloadTemp: stressById[line.id]?.overloadTemp || 30,
-            }));
-            
-            console.log('Updated lines sample:', {
-              id: updated[0]?.id,
-              stress: updated[0]?.stress,
-              rating: updated[0]?.rating
-            });
-            
-            return updated;
-          });
+            }))
+          );
           
           if (data.system) {
             const topLines = data.lines
@@ -237,46 +203,10 @@ const Index = () => {
       conductor: 'ACSR 795',
       mot: 75,
     });
-    setSelectedBus(null);
     
     toast({
       title: line.name,
       description: `Stress: ${line.stress.toFixed(1)}% | Rating: ${line.rating}A`,
-    });
-  };
-
-  const handleBusClick = (bus: any, connectedLines: any[]) => {
-    const sortedLines = connectedLines
-      .sort((a, b) => b.stress - a.stress)
-      .map(line => ({
-        id: line.id,
-        name: line.name,
-        stress: line.stress,
-      }));
-
-    const avgStress = connectedLines.length > 0
-      ? connectedLines.reduce((sum, l) => sum + l.stress, 0) / connectedLines.length
-      : 0;
-
-    setSelectedBus({
-      ...bus,
-      connectedLines: sortedLines,
-      avgStress,
-    });
-    setSelectedLine(null);
-
-    toast({
-      title: bus.name,
-      description: `${bus.v_nom} kV | ${bus.degree} lines | Avg stress: ${avgStress.toFixed(1)}%`,
-    });
-  };
-
-  const handleContingencySelect = (outage: string, issues: any[]) => {
-    setContingencyOutage(outage);
-    setContingencyIssues(issues);
-    toast({
-      title: 'Contingency Selected',
-      description: `Outage: ${outage} affects ${issues.length} lines`,
     });
   };
 
@@ -312,7 +242,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-180px)]">
             {/* Control Panel */}
-            <div className="lg:col-span-3 overflow-y-auto space-y-4">
+            <div className="lg:col-span-3 overflow-y-auto">
               <ControlPanel
                 temperature={temperature}
                 windSpeed={windSpeed}
@@ -323,29 +253,11 @@ const Index = () => {
                 onWindDirectionChange={setWindDirection}
                 onScenarioChange={setScenario}
               />
-              <ContingencyPanel
-                temperature={temperature}
-                windSpeed={windSpeed}
-                windDirection={windDirection}
-                scenario={scenario}
-                onContingencySelect={handleContingencySelect}
-              />
             </div>
 
             {/* Map */}
-            <div className="lg:col-span-6 h-full relative">
-              <Map 
-                lines={lines} 
-                buses={buses}
-                onLineClick={handleLineClick}
-                onBusClick={handleBusClick}
-                contingencyOutage={contingencyOutage}
-                contingencyIssues={contingencyIssues}
-              />
-              <BusDetailsDrawer 
-                bus={selectedBus} 
-                onClose={() => setSelectedBus(null)} 
-              />
+            <div className="lg:col-span-6 h-full">
+              <Map lines={lines} onLineClick={handleLineClick} />
             </div>
 
             {/* Stats Panel */}

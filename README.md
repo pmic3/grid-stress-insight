@@ -1,38 +1,8 @@
-# GeoStress - Dynamic Line Rating System
-
-Real-time transmission line thermal stress analysis for power grid management.
+# Welcome to your Lovable project
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/2f5494e7-8f88-45d1-8461-0d58756a9a46
-
-## Features
-
-### Dynamic Line Rating
-- Real-time transmission line stress calculation using IEEE-738 standard
-- Environmental factor integration (temperature, wind speed, wind direction)
-- Visual stress indicators on interactive map
-- Multiple scenario support (min, nominal, max load)
-
-### N-1 Contingency Analysis
-Evaluate system resilience by simulating single-line outages. The analysis:
-- Simulates loss of any transmission line
-- Identifies neighbor lines that would absorb additional load
-- Calculates post-outage stress levels for all affected lines
-- Reports top 10 most critical contingencies
-- Visualizes outage scenarios on the map with:
-  - Gray dashed lines for outage
-  - Highlighted affected lines with stress colors
-  - Interactive contingency selection
-
-**Note:** Full N-1 contingency requires a power-flow solver (PyPSA, MATPOWER).
-Our prototype uses a topological heuristic to demonstrate outage impact for hackathon purposes.
-
-### System Statistics
-- Overall system stress index
-- Stress distribution across lines (Safe/Warning/High/Overload)
-- First-to-fail line identification
-- Real-time thermal limit calculations
 
 ## How can I edit this code?
 
