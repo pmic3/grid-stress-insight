@@ -37,8 +37,12 @@ const Map = ({ lines, onLineClick }: MapProps) => {
     map.current.setStyle(styleUrl);
     
     // Re-add lines after style loads
-    map.current.once('style.load', () => {
-      updateMapLines();
+    map.current.once('styledata', () => {
+      if (map.current?.isStyleLoaded()) {
+        setTimeout(() => {
+          updateMapLines();
+        }, 100);
+      }
     });
   };
 
