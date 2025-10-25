@@ -154,6 +154,12 @@ const Index = () => {
         if (error) throw error;
 
         if (data && data.lines) {
+          console.log('Compute ratings response:', {
+            lineCount: data.lines.length,
+            sampleLine: data.lines[0],
+            sampleStress: data.lines[0]?.stressPct
+          });
+          
           // Build stress map by line id
           const stressById: Record<string, any> = {};
           data.lines.forEach((line: any) => {
@@ -166,15 +172,23 @@ const Index = () => {
           });
 
           // Update lines with new stress values
-          setLines(prevLines =>
-            prevLines.map(line => ({
+          setLines(prevLines => {
+            const updated = prevLines.map(line => ({
               ...line,
               stress: stressById[line.id]?.stress || 0,
               rating: stressById[line.id]?.rating || 0,
               actual: stressById[line.id]?.actual || 0,
               overloadTemp: stressById[line.id]?.overloadTemp || 30,
-            }))
-          );
+            }));
+            
+            console.log('Updated lines sample:', {
+              id: updated[0]?.id,
+              stress: updated[0]?.stress,
+              rating: updated[0]?.rating
+            });
+            
+            return updated;
+          });
           
           if (data.system) {
             const topLines = data.lines

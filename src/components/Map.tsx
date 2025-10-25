@@ -50,7 +50,12 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     map.current.on('load', () => {
+      console.log('Map loaded');
       updateMapLines();
+      if (buses.length > 0) {
+        console.log('Adding initial bus markers');
+        updateBusMarkers();
+      }
     });
   };
 
@@ -259,11 +264,11 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
   }, []);
 
   useEffect(() => {
-    if (map.current) {
+    if (map.current && map.current.isStyleLoaded()) {
       updateMapLines();
       
-      // Fit map to bounds of all lines
-      if (lines.length > 0 && map.current.isStyleLoaded()) {
+      // Fit map to bounds of all lines on first load
+      if (lines.length > 0) {
         const bounds = new mapboxgl.LngLatBounds();
         lines.forEach(line => {
           if (line.geometry && line.geometry.coordinates) {
@@ -284,18 +289,17 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
   }, [lines]);
 
   useEffect(() => {
-    console.log('Bus/Line effect triggered:', { busesCount: buses?.length || 0, linesCount: lines.length });
-    
     if (map.current && buses && buses.length > 0) {
-      // Ensure map style is loaded before adding markers
+      console.log(`Bus useEffect: ${buses.length} buses, map style loaded: ${map.current.isStyleLoaded()}`);
       if (map.current.isStyleLoaded()) {
         updateBusMarkers();
       } else {
-        console.log('Waiting for map style to load...');
-        map.current.once('style.load', () => {
-          console.log('Map style loaded, creating bus markers');
+        // Wait for next style load
+        const handler = () => {
+          console.log('Style loaded, now adding bus markers');
           updateBusMarkers();
-        });
+        };
+        map.current.once('styledata', handler);
       }
     }
   }, [buses, lines]);
