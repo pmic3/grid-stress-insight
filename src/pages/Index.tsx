@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Map from '@/components/Map';
 import ControlPanel from '@/components/ControlPanel';
 import StatsPanel from '@/components/StatsPanel';
 import BusDetailsDrawer from '@/components/BusDetailsDrawer';
+import OutageControls from '@/components/OutageControls';
 import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { OutageSimulator } from '@/utils/outageSimulation';
 
 // Mock data for initial display
 const mockLines = [
@@ -81,6 +83,9 @@ const Index = () => {
   const [selectedLine, setSelectedLine] = useState<any>(null);
   const [selectedBus, setSelectedBus] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [outageMode, setOutageMode] = useState(false);
+  const [cutLines, setCutLines] = useState<string[]>([]);
+  const [baseStress, setBaseStress] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
   // Load GeoJSON and buses on mount
@@ -171,6 +176,13 @@ const Index = () => {
             };
           });
 
+          // Store base stress values
+          const newBaseStress: Record<string, number> = {};
+          data.lines.forEach((line: any) => {
+            newBaseStress[line.id] = line.stressPct;
+          });
+          setBaseStress(newBaseStress);
+
           // Update lines with new stress values
           setLines(prevLines => {
             const updated = prevLines.map(line => ({
@@ -223,7 +235,93 @@ const Index = () => {
     computeRatings();
   }, [temperature, windSpeed, windDirection, scenario, lines.length]);
 
+  // Create outage simulator and calculate adjusted values
+  const cutLinesSet = useMemo(() => new Set(cutLines), [cutLines]);
+  
+  const outageSimulator = useMemo(() => {
+    if (lines.length === 0 || buses.length === 0) return null;
+    
+    // Create a copy with base stress before any adjustments
+    const linesWithBaseStress = lines.map(line => ({
+      ...line,
+      stress: baseStress[line.id] || line.stress
+    }));
+    
+    return new OutageSimulator(linesWithBaseStress, buses);
+  }, [lines.length, buses.length, baseStress]);
+
+  const { adjustedLines, adjustedStats } = useMemo(() => {
+    if (!outageSimulator || cutLinesSet.size === 0) {
+      return { adjustedLines: lines, adjustedStats: stats };
+    }
+
+    // Use base stress for calculations
+    const linesWithBaseStress = lines.map(line => ({
+      ...line,
+      stress: baseStress[line.id] || line.stress
+    }));
+
+    // Calculate adjusted stress
+    const adjustedStressMap = outageSimulator.calculateAdjustedStress(linesWithBaseStress, cutLinesSet);
+    
+    // Create adjusted lines with new stress values
+    const newAdjustedLines = lines.map(line => {
+      const adjustedStress = adjustedStressMap.get(line.id);
+      return {
+        ...line,
+        stress: adjustedStress === null ? 0 : (adjustedStress || line.stress),
+        isCut: adjustedStress === null,
+      };
+    });
+
+    // Calculate new system stats
+    const systemStats = outageSimulator.calculateSystemStats(linesWithBaseStress, adjustedStressMap);
+    
+    // Get top stressed lines for "first to fail"
+    const activeLines = newAdjustedLines
+      .filter(l => !l.isCut)
+      .sort((a, b) => b.stress - a.stress)
+      .slice(0, 3);
+
+    const newStats = {
+      systemStressIndex: systemStats.ssi,
+      stressBands: systemStats.bands,
+      avgStress: systemStats.avgStress,
+      maxStress: systemStats.maxStress,
+      firstToFail: activeLines.map(line => ({
+        name: line.name,
+        overloadTemp: (line as any).overloadTemp || 30,
+        stress: line.stress,
+      })),
+    };
+
+    return { adjustedLines: newAdjustedLines, adjustedStats: newStats };
+  }, [lines, stats, cutLinesSet, outageSimulator, baseStress]);
+
   const handleLineClick = (line: any) => {
+    // If in outage mode, toggle line cut status
+    if (outageMode) {
+      setCutLines(prev => {
+        const isCut = prev.includes(line.id);
+        if (isCut) {
+          toast({
+            title: 'Line Restored',
+            description: `${line.name} is back in service`,
+          });
+          return prev.filter(id => id !== line.id);
+        } else {
+          toast({
+            title: 'Line Cut',
+            description: `${line.name} marked as out-of-service`,
+            variant: 'destructive',
+          });
+          return [...prev, line.id];
+        }
+      });
+      return;
+    }
+
+    // Normal line selection for details
     setSelectedLine({
       name: line.name,
       rating: line.rating,
@@ -268,6 +366,14 @@ const Index = () => {
     });
   };
 
+  const handleRestoreAll = () => {
+    setCutLines([]);
+    toast({
+      title: 'All Lines Restored',
+      description: 'Grid restored to normal operation',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background grid */}
@@ -300,7 +406,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-180px)]">
             {/* Control Panel */}
-            <div className="lg:col-span-3 overflow-y-auto">
+            <div className="lg:col-span-3 overflow-y-auto space-y-4">
               <ControlPanel
                 temperature={temperature}
                 windSpeed={windSpeed}
@@ -311,15 +417,23 @@ const Index = () => {
                 onWindDirectionChange={setWindDirection}
                 onScenarioChange={setScenario}
               />
+              <OutageControls
+                outageMode={outageMode}
+                onOutageModeChange={setOutageMode}
+                cutLinesCount={cutLines.length}
+                onRestoreAll={handleRestoreAll}
+              />
             </div>
 
             {/* Map */}
             <div className="lg:col-span-6 h-full relative">
               <Map 
-                lines={lines} 
+                lines={adjustedLines} 
                 buses={buses}
                 onLineClick={handleLineClick}
                 onBusClick={handleBusClick}
+                cutLines={cutLinesSet}
+                outageMode={outageMode}
               />
               <BusDetailsDrawer 
                 bus={selectedBus} 
@@ -329,7 +443,7 @@ const Index = () => {
 
             {/* Stats Panel */}
             <div className="lg:col-span-3 overflow-y-auto">
-              <StatsPanel stats={stats} selectedLine={selectedLine} />
+              <StatsPanel stats={adjustedStats} selectedLine={selectedLine} />
             </div>
           </div>
         </div>

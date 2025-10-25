@@ -9,6 +9,7 @@ interface LineData {
   stress: number;
   rating: number;
   actual: number;
+  isCut?: boolean;
 }
 
 interface BusData {
@@ -25,11 +26,13 @@ interface MapProps {
   buses: BusData[];
   onLineClick?: (line: LineData) => void;
   onBusClick?: (bus: BusData, connectedLines: any[]) => void;
+  cutLines?: Set<string>;
+  outageMode?: boolean;
 }
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoicG1pY29uaSIsImEiOiJjbWNiMGJiMzUwOHY0MmxwejJhazhjcTd6In0.pNow26taTw3mku-wCPQCwA';
 
-const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
+const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outageMode = false }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const busMarkers = useRef<mapboxgl.Marker[]>([]);
@@ -99,6 +102,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
           stress: line.stress,
           rating: line.rating,
           actual: line.actual,
+          isCut: line.isCut || false,
         },
         geometry: line.geometry,
       })),
@@ -121,6 +125,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
       paint: {
         'line-color': [
           'case',
+          ['get', 'isCut'], '#6B7280',
           ['<', ['get', 'stress'], 70], '#2FB56F',
           ['<', ['get', 'stress'], 90], '#E0C400',
           ['<', ['get', 'stress'], 100], '#FF7B00',
@@ -128,10 +133,20 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
         ],
         'line-width': [
           'case',
+          ['get', 'isCut'], 2,
           ['>', ['get', 'stress'], 100], 4,
           3
         ],
-        'line-opacity': 0.8,
+        'line-opacity': [
+          'case',
+          ['get', 'isCut'], 0.4,
+          0.8
+        ],
+        'line-dasharray': [
+          'case',
+          ['get', 'isCut'], ['literal', [2, 2]],
+          ['literal', [1, 0]]
+        ],
       },
     });
 
@@ -146,9 +161,11 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
       }
     });
 
-    // Change cursor on hover
+    // Change cursor on hover based on mode
     map.current.on('mouseenter', 'transmission-lines', () => {
-      if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+      if (map.current) {
+        map.current.getCanvas().style.cursor = outageMode ? 'crosshair' : 'pointer';
+      }
     });
 
     map.current.on('mouseleave', 'transmission-lines', () => {
@@ -311,6 +328,13 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
       }
     }
   }, [buses, lines]);
+
+  // Update cursor when outage mode changes
+  useEffect(() => {
+    if (!map.current) return;
+    const canvas = map.current.getCanvas();
+    canvas.style.cursor = outageMode ? 'crosshair' : '';
+  }, [outageMode]);
 
   return (
     <div className="relative w-full h-full">
