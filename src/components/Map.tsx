@@ -46,6 +46,13 @@ const Map = ({ lines, onLineClick }: MapProps) => {
     });
   };
 
+  const getLineColor = (stress: number) => {
+    if (stress < 70) return '#2FB56F';
+    if (stress < 90) return '#E0C400';
+    if (stress < 100) return '#FF7B00';
+    return '#E02F2F';
+  };
+
   const updateMapLines = () => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
@@ -85,10 +92,10 @@ const Map = ({ lines, onLineClick }: MapProps) => {
       paint: {
         'line-color': [
           'case',
-          ['<', ['get', 'stress'], 70], '#10B981', // Green <70%
-          ['<', ['get', 'stress'], 90], '#F59E0B', // Amber 70-90%
-          ['<', ['get', 'stress'], 100], '#EF4444', // Red 90-100%
-          '#DC2626' // Dark red >100%
+          ['<', ['get', 'stress'], 70], '#2FB56F',
+          ['<', ['get', 'stress'], 90], '#E0C400',
+          ['<', ['get', 'stress'], 100], '#FF7B00',
+          '#E02F2F'
         ],
         'line-width': [
           'case',
@@ -134,6 +141,25 @@ const Map = ({ lines, onLineClick }: MapProps) => {
   useEffect(() => {
     if (map.current && isTokenSet) {
       updateMapLines();
+      
+      // Fit map to bounds of all lines
+      if (lines.length > 0 && map.current.isStyleLoaded()) {
+        const bounds = new mapboxgl.LngLatBounds();
+        lines.forEach(line => {
+          if (line.geometry && line.geometry.coordinates) {
+            line.geometry.coordinates.forEach((coord: [number, number]) => {
+              bounds.extend(coord);
+            });
+          }
+        });
+        
+        if (!bounds.isEmpty()) {
+          map.current.fitBounds(bounds, {
+            padding: 50,
+            duration: 1000,
+          });
+        }
+      }
     }
   }, [lines, isTokenSet]);
 
@@ -180,19 +206,19 @@ const Map = ({ lines, onLineClick }: MapProps) => {
       <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-4 py-2">
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-1 bg-success rounded"></div>
+            <div className="w-8 h-1 rounded" style={{ backgroundColor: '#2FB56F' }}></div>
             <span className="text-muted-foreground">&lt;70%</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-1 bg-warning rounded"></div>
+            <div className="w-8 h-1 rounded" style={{ backgroundColor: '#E0C400' }}></div>
             <span className="text-muted-foreground">70-90%</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-1 bg-destructive rounded"></div>
+            <div className="w-8 h-1 rounded" style={{ backgroundColor: '#FF7B00' }}></div>
             <span className="text-muted-foreground">90-100%</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-1 bg-destructive/80 rounded"></div>
+            <div className="w-8 h-1 rounded" style={{ backgroundColor: '#E02F2F' }}></div>
             <span className="text-muted-foreground">&gt;100%</span>
           </div>
         </div>

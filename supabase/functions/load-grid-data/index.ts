@@ -5,8 +5,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// GitHub raw content URLs for Hawaii 40 bus dataset
-const GITHUB_BASE = 'https://raw.githubusercontent.com/cwebber314/osu_hackathon/main';
+// In-memory cache for grid data
+let cachedGeojson: any = null;
+
+async function loadGeojson() {
+  if (cachedGeojson) return cachedGeojson;
+
+  const baseUrl = 'https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/data/hawaii_40bus/';
+  
+  console.log('Loading GeoJSON from GitHub...');
+  
+  const geojsonRes = await fetch(`${baseUrl}oneline_lines.geojson`);
+
+  if (!geojsonRes.ok) {
+    throw new Error('Failed to fetch GeoJSON file');
+  }
+
+  const geojson = await geojsonRes.json();
+
+  // Add id to GeoJSON features based on Name property
+  geojson.features.forEach((feature: any) => {
+    feature.properties.id = feature.properties.Name;
+  });
+
+  cachedGeojson = geojson;
+  console.log(`Loaded GeoJSON with ${geojson.features.length} features`);
+  
+  return cachedGeojson;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,79 +40,15 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Loading grid data from GitHub...');
+    const geojson = await loadGeojson();
 
-    // Fetch all required files
-    const [linesRes, flowsRes, geojsonRes] = await Promise.all([
-      fetch(`${GITHUB_BASE}/hawaii40_osu/csv/lines.csv`),
-      fetch(`${GITHUB_BASE}/hawaii40_osu/line_flows_nominal.csv`),
-      fetch(`${GITHUB_BASE}/hawaii40_osu/gis/oneline_lines.geojson`),
-    ]);
-
-    if (!linesRes.ok || !flowsRes.ok || !geojsonRes.ok) {
-      throw new Error('Failed to fetch one or more data files from GitHub');
-    }
-
-    const linesCSV = await linesRes.text();
-    const flowsCSV = await flowsRes.text();
-    const geojson = await geojsonRes.json();
-
-    console.log('Successfully loaded all data files');
-
-    // Parse CSV data
-    const parseCSV = (csv: string) => {
-      const lines = csv.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
-      return lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim());
-        const obj: any = {};
-        headers.forEach((h, i) => {
-          obj[h] = values[i];
-        });
-        return obj;
-      });
-    };
-
-    const linesData = parseCSV(linesCSV);
-    const flowsData = parseCSV(flowsCSV);
-
-    // Merge data: lines + flows + geometries
-    const mergedLines = linesData.map((line: any) => {
-      const flow = flowsData.find((f: any) => f.line_id === line.id);
-      const geometry = geojson.features.find((f: any) => f.properties.id === line.id);
-      
-      return {
-        id: line.id || line.name,
-        name: line.name,
-        bus0: line.bus0,
-        bus1: line.bus1,
-        s_nom: parseFloat(line.s_nom || '0'),
-        conductor: line.conductor || 'ACSR 795',
-        mot: parseFloat(line.mot || '75'),
-        p0_nominal: parseFloat(flow?.p0_nominal || '0'),
-        geometry: geometry?.geometry || null,
-      };
-    });
-
-    const response = {
-      lines: mergedLines,
-      geojson,
-      totalLines: mergedLines.length,
-      message: 'Grid data loaded successfully from GitHub',
-    };
-
-    console.log(`Processed ${mergedLines.length} transmission lines`);
-
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify({ geojson }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error loading grid data:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: 'Failed to load grid data from GitHub repository',
-    }), {
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

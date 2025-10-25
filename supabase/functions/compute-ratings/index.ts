@@ -133,6 +133,84 @@ function computeSystemStressIndex(stresses: number[]): any {
   };
 }
 
+// In-memory cache for grid data
+let cachedGridData: any = null;
+
+async function loadGridData() {
+  if (cachedGridData) return cachedGridData;
+
+  const baseUrl = 'https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/data/hawaii_40bus/';
+  
+  const [linesRes, flowsRes, geojsonRes] = await Promise.all([
+    fetch(`${baseUrl}lines.csv`),
+    fetch(`${baseUrl}line_flows_nominal.csv`),
+    fetch(`${baseUrl}oneline_lines.geojson`)
+  ]);
+
+  if (!linesRes.ok || !flowsRes.ok || !geojsonRes.ok) {
+    throw new Error('Failed to fetch grid data files');
+  }
+
+  const [linesCsv, flowsCsv, geojsonText] = await Promise.all([
+    linesRes.text(),
+    flowsRes.text(),
+    geojsonRes.text()
+  ]);
+
+  const parseCSV = (csv: string) => {
+    const lines = csv.trim().split('\n');
+    const headers = lines[0].split(',');
+    return lines.slice(1).map(line => {
+      const values = line.split(',');
+      const obj: any = {};
+      headers.forEach((header, i) => {
+        obj[header] = values[i];
+      });
+      return obj;
+    });
+  };
+
+  const linesData = parseCSV(linesCsv);
+  const flowsData = parseCSV(flowsCsv);
+  const geojson = JSON.parse(geojsonText);
+
+  const flowsMap: Record<string, any> = {};
+  flowsData.forEach(flow => {
+    flowsMap[flow.name] = parseFloat(flow.p0_nominal);
+  });
+
+  const linesDict: Record<string, any> = {};
+  geojson.features.forEach((feature: any) => {
+    const lineId = feature.properties.Name;
+    const lineData = linesData.find((l: any) => l.name === lineId);
+    
+    if (lineData && feature.geometry) {
+      let azimuth = 90;
+      if (feature.geometry.coordinates?.length >= 2) {
+        const [lon1, lat1] = feature.geometry.coordinates[0];
+        const [lon2, lat2] = feature.geometry.coordinates[1];
+        const dLon = lon2 - lon1;
+        const dLat = lat2 - lat1;
+        azimuth = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+      }
+
+      linesDict[lineId] = {
+        id: lineId,
+        name: lineData.branch_name,
+        azimuth,
+        kV: parseFloat(feature.properties.nomkv) || 115,
+        conductor: lineData.conductor,
+        mot: parseFloat(lineData.MOT),
+        s_nom: parseFloat(lineData.s_nom),
+        p0_nominal: flowsMap[lineId] || 0,
+      };
+    }
+  });
+
+  cachedGridData = linesDict;
+  return cachedGridData;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -143,58 +221,20 @@ serve(async (req) => {
     
     console.log('Computing ratings:', { tempC, windMS, windDeg, scenario });
 
-    // Fetch grid data from load-grid-data function
-    const gridDataUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/load-grid-data`;
-    const gridDataResponse = await fetch(gridDataUrl, {
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-      },
-    });
+    const linesDict = await loadGridData();
+    const lineIds = Object.keys(linesDict);
+    
+    console.log(`Processing ${lineIds.length} lines`);
 
-    if (!gridDataResponse.ok) {
-      throw new Error('Failed to fetch grid data');
-    }
+    const scenarioMultiplier = { min: 0.85, nominal: 1.0, max: 1.15 };
 
-    const gridData = await gridDataResponse.json();
-    console.log('Loaded grid data:', { lineCount: gridData.lines?.length });
-
-    // Process each line from the grid data - filter out lines without geometry
-    const lines = gridData.lines
-      .filter((line: any) => line.geometry && line.geometry.coordinates)
-      .map((line: any) => {
-        // Extract azimuth from geometry if available
-        let azimuth = 90; // default
-        if (line.geometry?.coordinates?.length >= 2) {
-          const [lon1, lat1] = line.geometry.coordinates[0];
-          const [lon2, lat2] = line.geometry.coordinates[1];
-          const dLon = lon2 - lon1;
-          const dLat = lat2 - lat1;
-          azimuth = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
-        }
-
-        return {
-          id: line.id,
-          name: line.name || `Line ${line.id}`,
-          conductor: line.conductor || 'ACSR 795',
-          mot: line.mot || 75,
-          azimuth,
-          nominalMVA: line.s_nom || 150,
-          kV: 115, // Assuming 115kV system
-          actualMVA: line.p0_nominal || line.s_nom * 0.9,
-          geometry: line.geometry,
-          coordinates: line.geometry.coordinates,
-        };
-      });
-
-    console.log(`Processing ${lines.length} lines with valid geometries`);
-
-    const results = lines.map((line: any) => {
+    const results = lineIds.map((lineId) => {
+      const line = linesDict[lineId];
       const conductor = conductorLibrary[line.conductor] || conductorLibrary['ACSR 795'];
       const attackAngle = computeAttackAngle(windDeg, line.azimuth);
       
       // Convert MVA to Amps: MVA * 1000 / (sqrt(3) * kV)
-      const scenarioMultiplier = { min: 0.85, nominal: 1.0, max: 1.15 };
-      const actualMVA = line.actualMVA * scenarioMultiplier[scenario];
+      const actualMVA = line.p0_nominal * scenarioMultiplier[scenario];
       const actualA = (actualMVA * 1000) / (Math.sqrt(3) * line.kV);
       
       const ratingA = ieee738Ampacity(tempC, windMS, attackAngle, line.mot, conductor);
@@ -202,20 +242,16 @@ serve(async (req) => {
       const overloadTemp = solveOverloadTemp({ ...line, attackAngle }, windMS, windDeg, actualA, conductor);
       
       return {
-        id: line.id,
+        id: lineId,
         name: line.name,
         ratingA,
         actualA,
         stressPct,
         overloadTemp,
-        conductor: line.conductor,
-        mot: line.mot,
-        geometry: line.geometry,
-        coordinates: line.coordinates,
       };
     });
 
-    const stresses = results.map((r: any) => r.stressPct);
+    const stresses = results.map((r) => r.stressPct);
     const systemStats = computeSystemStressIndex(stresses);
 
     const response = {

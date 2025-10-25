@@ -80,8 +80,48 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Load GeoJSON on mount
+  useEffect(() => {
+    const loadGeojson = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('load-grid-data');
+        if (error) throw error;
+
+        if (data?.geojson) {
+          // Store geojson features with geometries
+          const features = data.geojson.features.filter(
+            (f: any) => f.geometry && f.properties.id
+          );
+          
+          // Initialize lines with default stress values
+          const initialLines = features.map((f: any) => ({
+            id: f.properties.id,
+            name: f.properties.LineName,
+            geometry: f.geometry,
+            stress: 0,
+            rating: 0,
+            actual: 0,
+          }));
+          
+          setLines(initialLines);
+        }
+      } catch (error) {
+        console.error('Error loading grid data:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load grid geometry.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadGeojson();
+  }, []);
+
   // Fetch and compute ratings when environmental params change
   useEffect(() => {
+    if (lines.length === 0) return;
+
     const computeRatings = async () => {
       setIsLoading(true);
       try {
@@ -97,40 +137,43 @@ const Index = () => {
         if (error) throw error;
 
         if (data && data.lines) {
-          console.log('Received data:', { lineCount: data.lines.length, firstLine: data.lines[0] });
-          
-          // Transform backend response to frontend format
-          const transformedLines = data.lines
-            .filter((line: any) => line.geometry && line.geometry.coordinates)
-            .map((line: any) => ({
-              id: line.id,
-              name: line.name,
-              geometry: line.geometry,
+          // Build stress map by line id
+          const stressById: Record<string, any> = {};
+          data.lines.forEach((line: any) => {
+            stressById[line.id] = {
               stress: line.stressPct,
               rating: line.ratingA,
               actual: line.actualA,
-              conductor: line.conductor,
-              mot: line.mot,
               overloadTemp: line.overloadTemp,
-            }));
-          
-          console.log('Transformed lines:', { count: transformedLines.length });
-          setLines(transformedLines);
+            };
+          });
+
+          // Update lines with new stress values
+          setLines(prevLines =>
+            prevLines.map(line => ({
+              ...line,
+              stress: stressById[line.id]?.stress || 0,
+              rating: stressById[line.id]?.rating || 0,
+              actual: stressById[line.id]?.actual || 0,
+              overloadTemp: stressById[line.id]?.overloadTemp || 30,
+            }))
+          );
           
           if (data.system) {
+            const topLines = data.lines
+              .sort((a: any, b: any) => b.stressPct - a.stressPct)
+              .slice(0, 3);
+
             setStats({
               systemStressIndex: data.system.ssi,
               stressBands: data.system.bands,
               avgStress: data.system.avgStress,
               maxStress: data.system.maxStress,
-              firstToFail: transformedLines
-                .sort((a: any, b: any) => b.stress - a.stress)
-                .slice(0, 3)
-                .map((line: any) => ({
-                  name: line.name,
-                  overloadTemp: line.overloadTemp || 30,
-                  stress: line.stress,
-                })),
+              firstToFail: topLines.map((line: any) => ({
+                name: line.name,
+                overloadTemp: line.overloadTemp || 30,
+                stress: line.stressPct,
+              })),
             });
           }
         }
@@ -138,7 +181,7 @@ const Index = () => {
         console.error('Error computing ratings:', error);
         toast({
           title: 'Error',
-          description: 'Failed to compute line ratings. Using mock data.',
+          description: 'Failed to compute line ratings.',
           variant: 'destructive',
         });
       } finally {
@@ -147,7 +190,7 @@ const Index = () => {
     };
 
     computeRatings();
-  }, [temperature, windSpeed, windDirection, scenario]);
+  }, [temperature, windSpeed, windDirection, scenario, lines.length]);
 
   const handleLineClick = (line: any) => {
     setSelectedLine({
