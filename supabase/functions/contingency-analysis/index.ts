@@ -82,32 +82,18 @@ function computeLineStress(actualA: number, ratingA: number): number {
 }
 
 async function loadGridData(): Promise<Map<string, LineData>> {
-  // Use GitHub source (preferred), fallback to bundled _shared CSVs
-  const GITHUB_BASE = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/csv/";
-
-  try {
-    console.log('Fetching grid data from GitHub...');
-    const [linesRes, flowsRes] = await Promise.all([
-      fetch(`${GITHUB_BASE}lines.csv`),
-      fetch(`${GITHUB_BASE}line_flows_nominal.csv`)
-    ]);
-
-    if (!linesRes.ok) throw new Error(`Failed to fetch lines.csv: ${linesRes.status}`);
-    if (!flowsRes.ok) throw new Error(`Failed to fetch line_flows_nominal.csv: ${flowsRes.status}`);
-
-    const linesText = await linesRes.text();
-    const flowsText = await flowsRes.text();
-    console.log('Fetched CSVs from GitHub');
-
-    return parseGrid(linesText, flowsText);
-  } catch (e) {
-    console.error('GitHub fetch failed, falling back to local CSVs:', e);
-    // Fallback to local bundled CSVs
-    const linesText = await Deno.readTextFile('../_shared/data/lines.csv');
-    const flowsText = await Deno.readTextFile('../_shared/data/line_flows_nominal.csv');
-    console.log('Loaded CSVs from local _shared folder');
-    return parseGrid(linesText, flowsText);
-  }
+  console.log('Loading grid data from bundled CSV files...');
+  
+  // Use the bundled CSV files in _shared/data
+  const decoder = new TextDecoder('utf-8');
+  const linesRaw = await Deno.readFile(new URL('../_shared/data/lines.csv', import.meta.url));
+  const flowsRaw = await Deno.readFile(new URL('../_shared/data/line_flows_nominal.csv', import.meta.url));
+  
+  const linesText = decoder.decode(linesRaw);
+  const flowsText = decoder.decode(flowsRaw);
+  
+  console.log('Loaded bundled CSV files');
+  return parseGrid(linesText, flowsText);
 }
 
 function parseGrid(linesText: string, flowsText: string): Map<string, LineData> {
