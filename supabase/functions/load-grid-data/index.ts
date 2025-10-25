@@ -37,40 +37,33 @@ function computeAzimuthFromCoords(coords: number[][]): number {
   return (brng + 360) % 360; // 0..360°
 }
 
+// ── Loader ─────────────────────────────────────────────────────────────────────
 let cachedGeojson: any = null;
 
 async function loadGeojson() {
-  if (cachedGeojson) {
-    return cachedGeojson;
+  if (cachedGeojson) return cachedGeojson;
+
+  const GITHUB_BASE = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/gis/";
+  console.log("Loading GeoJSON from GitHub...");
+
+  const res = await fetch(`${GITHUB_BASE}oneline_lines.geojson`);
+  if (!res.ok) throw new Error("Failed to fetch GeoJSON file");
+
+  const geojson = await res.json();
+
+  // Enrich features: id, normalized kV, azimuth
+  for (const feature of geojson.features) {
+    const props = feature.properties ?? (feature.properties = {});
+    props.id = props.id || props.Name; // stable id for coloring
+    props.kV = normalizeKV(props.nomkv); // normalize voltage → kV
+
+    const coords = getLineCoords(feature.geometry);
+    props.azimuth = coords ? computeAzimuthFromCoords(coords) : 0; // 0..360°
   }
-  
-  console.log('Loading GeoJSON from local file...');
-  
-  try {
-    const geojsonPath = new URL('../_shared/data/oneline_lines.geojson', import.meta.url);
-    const geojsonText = await Deno.readTextFile(geojsonPath);
-    const geojson = JSON.parse(geojsonText);
-    
-    for (const feature of geojson.features) {
-      if (!feature.properties.id) {
-        feature.properties.id = feature.properties.Name || feature.properties.LineName;
-      }
-      
-      feature.properties.kV = normalizeKV(feature.properties.nomkv);
-      
-      const coords = getLineCoords(feature.geometry);
-      if (coords) {
-        feature.properties.azimuth = computeAzimuthFromCoords(coords);
-      }
-    }
-    
-    console.log(`Loaded GeoJSON with ${geojson.features.length} features`);
-    cachedGeojson = geojson;
-    return geojson;
-  } catch (error) {
-    console.error('Error loading GeoJSON:', error);
-    throw error;
-  }
+
+  cachedGeojson = geojson;
+  console.log(`Loaded GeoJSON with ${geojson.features.length} features`);
+  return cachedGeojson;
 }
 
 // ── HTTP handler ───────────────────────────────────────────────────────────────
@@ -80,16 +73,15 @@ serve(async (req) => {
   }
   try {
     const geojson = await loadGeojson();
-    
-    return new Response(JSON.stringify(geojson), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return new Response(JSON.stringify({ geojson }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error('Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+  } catch (err) {
+    console.error("Error loading grid data:", err);
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

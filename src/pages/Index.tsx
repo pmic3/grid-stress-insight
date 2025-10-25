@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import Map from '@/components/Map';
 import ControlPanel from '@/components/ControlPanel';
 import StatsPanel from '@/components/StatsPanel';
-import AboutRatingsModal from '@/components/AboutRatingsModal';
-import { Zap, Info } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 
 // Mock data for initial display
 const mockLines = [
@@ -80,7 +78,6 @@ const Index = () => {
   const [stats, setStats] = useState(mockStats);
   const [selectedLine, setSelectedLine] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Load GeoJSON on mount
@@ -140,24 +137,25 @@ const Index = () => {
         if (error) throw error;
 
         if (data && data.lines) {
+          // Build stress map by line id
           const stressById: Record<string, any> = {};
           data.lines.forEach((line: any) => {
             stressById[line.id] = {
-              stress: parseFloat(line.stressPct),
-              rating: parseFloat(line.dynamicRatingA),
-              actual: parseFloat(line.actualA),
-              nameplateA: parseFloat(line.nameplateA),
-              deltaPct: parseFloat(line.deltaPct),
-              conductor: line.conductor,
-              kV: parseFloat(line.kV),
-              mot: line.mot,
+              stress: line.stressPct,
+              rating: line.ratingA,
+              actual: line.actualA,
+              overloadTemp: line.overloadTemp,
             };
           });
 
+          // Update lines with new stress values
           setLines(prevLines =>
             prevLines.map(line => ({
               ...line,
-              ...stressById[line.id],
+              stress: stressById[line.id]?.stress || 0,
+              rating: stressById[line.id]?.rating || 0,
+              actual: stressById[line.id]?.actual || 0,
+              overloadTemp: stressById[line.id]?.overloadTemp || 30,
             }))
           );
           
@@ -200,18 +198,15 @@ const Index = () => {
       rating: line.rating,
       actual: line.actual,
       stress: line.stress,
-      nameplateA: line.nameplateA,
-      deltaPct: line.deltaPct,
-      overloadTemp: line.overloadTemp || 'N/A',
+      overloadTemp: 35 + Math.random() * 10,
       overloadWind: 2 + Math.random() * 3,
-      conductor: line.conductor || 'ACSR 795',
-      mot: line.mot || 75,
-      kV: line.kV,
+      conductor: 'ACSR 795',
+      mot: 75,
     });
     
     toast({
-      title: line.name || line.id,
-      description: `Stress: ${line.stress.toFixed(1)}% | Dynamic: ${line.rating}A vs Nameplate: ${line.nameplateA}A`,
+      title: line.name,
+      description: `Stress: ${line.stress.toFixed(1)}% | Rating: ${line.rating}A`,
     });
   };
 
@@ -230,7 +225,7 @@ const Index = () => {
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Zap className="w-6 h-6 text-primary" />
               </div>
-              <div className="flex-1">
+              <div>
                 <h1 className="text-2xl font-bold text-foreground">
                   GeoStress
                   <span className="text-primary ml-2">Dynamic Line Rating System</span>
@@ -239,20 +234,9 @@ const Index = () => {
                   Real-time transmission line thermal stress analysis
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAboutModalOpen(true)}
-                className="gap-2"
-              >
-                <Info className="w-4 h-4" />
-                About IEEE-738
-              </Button>
             </div>
           </div>
         </header>
-        
-        <AboutRatingsModal open={aboutModalOpen} onOpenChange={setAboutModalOpen} />
 
         {/* Main Content */}
         <div className="container mx-auto px-6 py-6">
