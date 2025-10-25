@@ -72,6 +72,9 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
   const updateMapLines = () => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
+    console.log('Updating map lines:', lines.length);
+    console.log('Sample line stress values:', lines.slice(0, 3).map(l => ({ id: l.id, stress: l.stress })));
+
     // Remove existing layers and sources
     if (map.current.getLayer('transmission-lines')) {
       map.current.removeLayer('transmission-lines');
@@ -100,6 +103,11 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
       type: 'geojson',
       data: geojson,
     });
+
+    console.log('GeoJSON features with stress:', geojson.features.slice(0, 3).map(f => ({ 
+      id: f.properties?.id, 
+      stress: f.properties?.stress 
+    })));
 
     map.current.addLayer({
       id: 'transmission-lines',
