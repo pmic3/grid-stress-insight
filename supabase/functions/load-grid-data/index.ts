@@ -5,6 +5,38 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function normalizeKV(raw: any): number {
+  const v = parseFloat(raw);
+  if (!isFinite(v) || v <= 0) return 115; // sensible default
+  if (v > 1000) return v / 1000; // Volts → kV (e.g., 69000 → 69)
+  if (v < 1) return v * 1000; // MV → kV (e.g., 0.115 → 115)
+  return v; // already kV
+}
+
+function getLineCoords(geom: any): number[][] | null {
+  if (!geom) return null;
+  if (geom.type === "LineString") return geom.coordinates as number[][];
+  if (geom.type === "MultiLineString" && geom.coordinates?.length > 0) {
+    return geom.coordinates[0] as number[][];
+  }
+  return null;
+}
+
+function computeAzimuthFromCoords(coords: number[][]): number {
+  if (!coords || coords.length < 2) return 0;
+  const [lon1, lat1] = coords[0];
+  const [lon2, lat2] = coords[coords.length - 1];
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const φ1 = toRad(lat1),
+    φ2 = toRad(lat2);
+  const Δλ = toRad(lon2 - lon1);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const brng = (Math.atan2(y, x) * 180) / Math.PI;
+  return (brng + 360) % 360; // 0..360°
+}
+
 // ── Loader ─────────────────────────────────────────────────────────────────────
 let cachedGeojson: any = null;
 
