@@ -86,6 +86,14 @@ const Index = () => {
   const [outageMode, setOutageMode] = useState(false);
   const [cutLines, setCutLines] = useState<string[]>([]);
   const [baseStress, setBaseStress] = useState<Record<string, number>>({});
+  const [mode, setMode] = useState<'manual' | 'current'>('manual');
+  const [weatherData, setWeatherData] = useState<{
+    tempC: number;
+    windMS: number;
+    windDeg: number;
+    asOf: string;
+  } | null>(null);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
   const { toast } = useToast();
 
   // Load GeoJSON and buses on mount
@@ -139,6 +147,51 @@ const Index = () => {
 
     loadData();
   }, []);
+
+  // Fetch weather when entering Current mode
+  const fetchWeather = async () => {
+    setIsLoadingWeather(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('weather-current');
+      if (error) throw error;
+      
+      if (data) {
+        setWeatherData(data);
+        setTemperature(data.tempC);
+        setWindSpeed(data.windMS);
+        setWindDirection(data.windDeg);
+        
+        toast({
+          title: 'Weather Updated',
+          description: `Live conditions: ${data.tempC}°C, ${data.windMS} m/s`,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching weather:', error);
+      toast({
+        title: 'Weather Fetch Failed',
+        description: 'Using fallback values',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingWeather(false);
+    }
+  };
+
+  // Auto-fetch weather when switching to Current mode
+  useEffect(() => {
+    if (mode === 'current') {
+      fetchWeather();
+    }
+  }, [mode]);
+
+  const handleModeChange = (newMode: 'manual' | 'current') => {
+    setMode(newMode);
+    if (newMode === 'manual') {
+      setWeatherData(null);
+    }
+  };
+
 
   // Fetch and compute ratings when environmental params change
   useEffect(() => {
@@ -416,10 +469,15 @@ const Index = () => {
                 windSpeed={windSpeed}
                 windDirection={windDirection}
                 scenario={scenario}
+                mode={mode}
+                weatherData={weatherData}
+                isLoadingWeather={isLoadingWeather}
                 onTemperatureChange={setTemperature}
                 onWindSpeedChange={setWindSpeed}
                 onWindDirectionChange={setWindDirection}
                 onScenarioChange={setScenario}
+                onModeChange={handleModeChange}
+                onRefreshWeather={fetchWeather}
               />
               <OutageControls
                 outageMode={outageMode}
