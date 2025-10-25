@@ -82,38 +82,42 @@ function computeLineStress(actualA: number, ratingA: number): number {
 }
 
 async function loadGridData(): Promise<Map<string, LineData>> {
-  // Use same GitHub source as other functions
+  // Use GitHub source (preferred), fallback to bundled _shared CSVs
   const GITHUB_BASE = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/csv/";
-  
-  console.log('Fetching grid data from GitHub...');
-  
-  const [linesRes, flowsRes] = await Promise.all([
-    fetch(`${GITHUB_BASE}lines.csv`),
-    fetch(`${GITHUB_BASE}line_flows_nominal.csv`)
-  ]);
-  
-  if (!linesRes.ok) {
-    console.error(`Failed to fetch lines.csv: ${linesRes.status} ${linesRes.statusText}`);
-    throw new Error(`Failed to fetch lines.csv: ${linesRes.status}`);
-  }
-  
-  if (!flowsRes.ok) {
-    console.error(`Failed to fetch line_flows_nominal.csv: ${flowsRes.status} ${flowsRes.statusText}`);
-    throw new Error(`Failed to fetch line_flows_nominal.csv: ${flowsRes.status}`);
-  }
-  
-  const linesText = await linesRes.text();
-  const flowsText = await flowsRes.text();
-  
-  console.log('Successfully fetched CSV data');
 
+  try {
+    console.log('Fetching grid data from GitHub...');
+    const [linesRes, flowsRes] = await Promise.all([
+      fetch(`${GITHUB_BASE}lines.csv`),
+      fetch(`${GITHUB_BASE}line_flows_nominal.csv`)
+    ]);
+
+    if (!linesRes.ok) throw new Error(`Failed to fetch lines.csv: ${linesRes.status}`);
+    if (!flowsRes.ok) throw new Error(`Failed to fetch line_flows_nominal.csv: ${flowsRes.status}`);
+
+    const linesText = await linesRes.text();
+    const flowsText = await flowsRes.text();
+    console.log('Fetched CSVs from GitHub');
+
+    return parseGrid(linesText, flowsText);
+  } catch (e) {
+    console.error('GitHub fetch failed, falling back to local CSVs:', e);
+    // Fallback to local bundled CSVs
+    const linesText = await Deno.readTextFile('../_shared/data/lines.csv');
+    const flowsText = await Deno.readTextFile('../_shared/data/line_flows_nominal.csv');
+    console.log('Loaded CSVs from local _shared folder');
+    return parseGrid(linesText, flowsText);
+  }
+}
+
+function parseGrid(linesText: string, flowsText: string): Map<string, LineData> {
   const linesRows = linesText.trim().split('\n').slice(1);
   const flowsRows = flowsText.trim().split('\n').slice(1);
 
   const flowMap = new Map<string, number>();
   flowsRows.forEach(row => {
-    const [name, p0] = row.split(',');
-    flowMap.set(name.trim(), parseFloat(p0));
+    const [id, p0] = row.split(',');
+    flowMap.set(id.trim(), parseFloat(p0));
   });
 
   const gridMap = new Map<string, LineData>();
@@ -125,8 +129,7 @@ async function loadGridData(): Promise<Map<string, LineData>> {
     const name = cols[4].trim(); // branch_name
     const conductor = cols[11].trim();
     const MOT = parseFloat(cols[12]);
-    
-    // Determine kV from voltage level in name
+
     let kV = 138;
     if (name.includes('69')) kV = 69;
     if (name.includes('138')) kV = 138;
@@ -139,7 +142,7 @@ async function loadGridData(): Promise<Map<string, LineData>> {
       conductor,
       p0_nominal: flowMap.get(id) || 0,
       kV,
-      MOT
+      MOT,
     });
   });
 
