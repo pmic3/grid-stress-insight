@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 
 interface LineData {
   id: string;
@@ -19,17 +16,16 @@ interface MapProps {
   onLineClick?: (line: LineData) => void;
 }
 
+const MAPBOX_TOKEN = 'pk.eyJ1IjoicG1pY29uaSIsImEiOiJjbWNiMGJiMzUwOHY0MmxwejJhazhjcTd6In0.pNow26taTw3mku-wCPQCwA';
+
 const Map = ({ lines, onLineClick }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [tokenInput, setTokenInput] = useState('');
-  const [isTokenSet, setIsTokenSet] = useState(false);
 
-  const initializeMap = (token: string) => {
+  const initializeMap = () => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = token;
+    mapboxgl.accessToken = MAPBOX_TOKEN;
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -128,18 +124,16 @@ const Map = ({ lines, onLineClick }: MapProps) => {
   };
 
   useEffect(() => {
-    if (isTokenSet && mapboxToken) {
-      initializeMap(mapboxToken);
-    }
+    initializeMap();
 
     return () => {
       map.current?.remove();
       map.current = null;
     };
-  }, [isTokenSet, mapboxToken]);
+  }, []);
 
   useEffect(() => {
-    if (map.current && isTokenSet) {
+    if (map.current) {
       updateMapLines();
       
       // Fit map to bounds of all lines
@@ -161,44 +155,7 @@ const Map = ({ lines, onLineClick }: MapProps) => {
         }
       }
     }
-  }, [lines, isTokenSet]);
-
-  const handleSetToken = () => {
-    if (tokenInput.trim()) {
-      setMapboxToken(tokenInput);
-      setIsTokenSet(true);
-    }
-  };
-
-  if (!isTokenSet) {
-    return (
-      <div className="relative w-full h-full flex items-center justify-center bg-card border border-border rounded-lg">
-        <div className="max-w-md p-8 space-y-4">
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-foreground">Mapbox Token Required</h3>
-            <p className="text-sm text-muted-foreground">
-              To display the transmission line map, please enter your Mapbox public token.
-              Get one at <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a>
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="mapbox-token">Mapbox Public Token</Label>
-            <Input
-              id="mapbox-token"
-              type="text"
-              placeholder="pk.eyJ1..."
-              value={tokenInput}
-              onChange={(e) => setTokenInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSetToken()}
-            />
-          </div>
-          <Button onClick={handleSetToken} className="w-full">
-            Initialize Map
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  }, [lines]);
 
   return (
     <div className="relative w-full h-full">
