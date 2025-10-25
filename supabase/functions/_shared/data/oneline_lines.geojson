@@ -1,0 +1,2707 @@
+{
+  "type": "FeatureCollection",
+  "name": "oneline_lines",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA138 (1)  TO  HONOLULU138 (5) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 1,
+        "BusNumTo": 5,
+        "Circuit": 1,
+        "BusNameTo": "HONOLULU138",
+        "BusNameFrom": "ALOHA138",
+        "nomkv": 138.0,
+        "Name": "L0"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9195929,
+            21.3355542
+          ],
+          [
+            -157.9195929,
+            21.3332943
+          ],
+          [
+            -157.8359547,
+            21.3188082
+          ],
+          [
+            -157.8359547,
+            21.316548
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA138 (1)  TO  HONOLULU138 (5) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 1,
+        "BusNumTo": 5,
+        "Circuit": 2,
+        "BusNameTo": "HONOLULU138",
+        "BusNameFrom": "ALOHA138",
+        "nomkv": 138.0,
+        "Name": "L1"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9223923,
+            21.3355542
+          ],
+          [
+            -157.9223923,
+            21.3332943
+          ],
+          [
+            -157.8387542,
+            21.3188082
+          ],
+          [
+            -157.8387542,
+            21.316548
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA138 (1)  TO  WAIPAHU138 (22) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 1,
+        "BusNumTo": 22,
+        "Circuit": 1,
+        "BusNameTo": "WAIPAHU138",
+        "BusNameFrom": "ALOHA138",
+        "nomkv": 138.0,
+        "Name": "L2"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9195929,
+            21.344246
+          ],
+          [
+            -157.9195929,
+            21.3465058
+          ],
+          [
+            -157.9691408,
+            21.4065228
+          ],
+          [
+            -157.9691408,
+            21.4087816
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA138 (1)  TO  EWA BEACH138 (25) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 1,
+        "BusNumTo": 25,
+        "Circuit": 1,
+        "BusNameTo": "EWA BEACH138",
+        "BusNameFrom": "ALOHA138",
+        "nomkv": 138.0,
+        "Name": "L3"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9307907,
+            21.344246
+          ],
+          [
+            -157.9307907,
+            21.3465058
+          ],
+          [
+            -158.0075848,
+            21.3338043
+          ],
+          [
+            -158.0075848,
+            21.3360643
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA138 (1)  TO  EWA BEACH138 (25) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 1,
+        "BusNumTo": 25,
+        "Circuit": 2,
+        "BusNameTo": "EWA BEACH138",
+        "BusNameFrom": "ALOHA138",
+        "nomkv": 138.0,
+        "Name": "L4"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9335902,
+            21.344246
+          ],
+          [
+            -157.9335902,
+            21.3465058
+          ],
+          [
+            -158.0103843,
+            21.3338043
+          ],
+          [
+            -158.0103843,
+            21.3360643
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA138 (1)  TO  KALAELOA138 (35) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 1,
+        "BusNumTo": 35,
+        "Circuit": 1,
+        "BusNameTo": "KALAELOA138",
+        "BusNameFrom": "ALOHA138",
+        "nomkv": 138.0,
+        "Name": "L5"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9363897,
+            21.3355542
+          ],
+          [
+            -157.9363897,
+            21.3332943
+          ],
+          [
+            -158.0946303,
+            21.3056794
+          ],
+          [
+            -158.0946303,
+            21.303419
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA138 (1)  TO  KALAELOA138 (35) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 1,
+        "BusNumTo": 35,
+        "Circuit": 2,
+        "BusNameTo": "KALAELOA138",
+        "BusNameFrom": "ALOHA138",
+        "nomkv": 138.0,
+        "Name": "L6"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9391891,
+            21.3355542
+          ],
+          [
+            -157.9391891,
+            21.3332943
+          ],
+          [
+            -158.0974297,
+            21.3056794
+          ],
+          [
+            -158.0974297,
+            21.303419
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "HONOLULU138 (5)  TO  TURTLE138 (9) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 5,
+        "BusNumTo": 9,
+        "Circuit": 1,
+        "BusNameTo": "TURTLE138",
+        "BusNameFrom": "HONOLULU138",
+        "nomkv": 138.0,
+        "Name": "L25"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8443531,
+            21.3078546
+          ],
+          [
+            -157.8443531,
+            21.3055942
+          ],
+          [
+            -157.8217441,
+            21.2757229
+          ],
+          [
+            -157.8217441,
+            21.273462
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "HONOLULU138 (5)  TO  KAILUA138 (14) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 5,
+        "BusNumTo": 14,
+        "Circuit": 1,
+        "BusNameTo": "KAILUA138",
+        "BusNameFrom": "HONOLULU138",
+        "nomkv": 138.0,
+        "Name": "L26"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8247569,
+            21.316548
+          ],
+          [
+            -157.8247569,
+            21.3188082
+          ],
+          [
+            -157.7546887,
+            21.3841361
+          ],
+          [
+            -157.7546887,
+            21.3863952
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "TURTLE138 (9)  TO  KAILUA138 (14) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 9,
+        "BusNumTo": 14,
+        "Circuit": 1,
+        "BusNameTo": "KAILUA138",
+        "BusNameFrom": "TURTLE138",
+        "nomkv": 138.0,
+        "Name": "L40"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8161452,
+            21.273462
+          ],
+          [
+            -157.8161452,
+            21.2757229
+          ],
+          [
+            -157.7490897,
+            21.3841361
+          ],
+          [
+            -157.7490897,
+            21.3863952
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAIPAHU138 (22)  TO  EWA BEACH138 (25) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 22,
+        "BusNumTo": 25,
+        "Circuit": 1,
+        "BusNameTo": "EWA BEACH138",
+        "BusNameFrom": "WAIPAHU138",
+        "nomkv": 138.0,
+        "Name": "L55"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9803387,
+            21.4087816
+          ],
+          [
+            -157.9803387,
+            21.4065228
+          ],
+          [
+            -158.0103843,
+            21.3470158
+          ],
+          [
+            -158.0103843,
+            21.344756
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAIPAHU138 (22)  TO  KAHE138 (37) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 22,
+        "BusNumTo": 37,
+        "Circuit": 1,
+        "BusNameTo": "KAHE138",
+        "BusNameFrom": "WAIPAHU138",
+        "nomkv": 138.0,
+        "Name": "L56"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9831381,
+            21.4087816
+          ],
+          [
+            -157.9831381,
+            21.4065228
+          ],
+          [
+            -158.1281531,
+            21.3586546
+          ],
+          [
+            -158.1281531,
+            21.356395
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "EWA BEACH138 (25)  TO  KALAELOA138 (35) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 25,
+        "BusNumTo": 35,
+        "Circuit": 1,
+        "BusNameTo": "KALAELOA138",
+        "BusNameFrom": "EWA BEACH138",
+        "nomkv": 138.0,
+        "Name": "L63"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0187827,
+            21.3360643
+          ],
+          [
+            -158.0187827,
+            21.3338043
+          ],
+          [
+            -158.1002292,
+            21.3056794
+          ],
+          [
+            -158.1002292,
+            21.303419
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "EWA BEACH138 (25)  TO  KALAELOA138 (35) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 25,
+        "BusNumTo": 35,
+        "Circuit": 2,
+        "BusNameTo": "KALAELOA138",
+        "BusNameFrom": "EWA BEACH138",
+        "nomkv": 138.0,
+        "Name": "L64"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0215821,
+            21.3360643
+          ],
+          [
+            -158.0215821,
+            21.3338043
+          ],
+          [
+            -158.1030287,
+            21.3056794
+          ],
+          [
+            -158.1030287,
+            21.303419
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "EWA BEACH138 (25)  TO  KAHE138 (37) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 25,
+        "BusNumTo": 37,
+        "Circuit": 1,
+        "BusNameTo": "KAHE138",
+        "BusNameFrom": "EWA BEACH138",
+        "nomkv": 138.0,
+        "Name": "L65"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0187827,
+            21.344756
+          ],
+          [
+            -158.0187673097177,
+            21.34655588161489
+          ],
+          [
+            -158.12252341257783,
+            21.345101942697646
+          ],
+          [
+            -158.1225542,
+            21.347704
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "EWA BEACH138 (25)  TO  KAHE138 (37) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 25,
+        "BusNumTo": 37,
+        "Circuit": 2,
+        "BusNameTo": "KAHE138",
+        "BusNameFrom": "EWA BEACH138",
+        "nomkv": 138.0,
+        "Name": "L66"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0215821,
+            21.344756
+          ],
+          [
+            -158.02160930778714,
+            21.347337874754952
+          ],
+          [
+            -158.12538430974817,
+            21.345833137640884
+          ],
+          [
+            -158.1253537,
+            21.347704
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KALAELOA138 (35)  TO  KAHE138 (37) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 35,
+        "BusNumTo": 37,
+        "Circuit": 1,
+        "BusNameTo": "KAHE138",
+        "BusNameFrom": "KALAELOA138",
+        "nomkv": 138.0,
+        "Name": "L76"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.1058281,
+            21.303419
+          ],
+          [
+            -158.1058281,
+            21.3056794
+          ],
+          [
+            -158.1281531,
+            21.3454442
+          ],
+          [
+            -158.1281531,
+            21.347704
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  WAVE69 (4) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 4,
+        "Circuit": 1,
+        "BusNameTo": "WAVE69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L7"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9335902,
+            21.3355542
+          ],
+          [
+            -157.9335902,
+            21.3332943
+          ],
+          [
+            -157.8483004,
+            21.2945341
+          ],
+          [
+            -157.8483004,
+            21.293143
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  HONOLULU69 (6) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 6,
+        "Circuit": 1,
+        "BusNameTo": "HONOLULU69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L8"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9251918,
+            21.3355542
+          ],
+          [
+            -157.9251918,
+            21.3332943
+          ],
+          [
+            -157.8415537,
+            21.3188082
+          ],
+          [
+            -157.8415537,
+            21.316548
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  HONOLULU69 (6) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 6,
+        "Circuit": 2,
+        "BusNameTo": "HONOLULU69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L9"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9279913,
+            21.3355542
+          ],
+          [
+            -157.9279913,
+            21.3332943
+          ],
+          [
+            -157.8443531,
+            21.3188082
+          ],
+          [
+            -157.8443531,
+            21.316548
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  SURF69 (7) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 7,
+        "Circuit": 1,
+        "BusNameTo": "SURF69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L10"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9307907,
+            21.3355542
+          ],
+          [
+            -157.9307907,
+            21.3332943
+          ],
+          [
+            -157.8264024,
+            21.2929091
+          ],
+          [
+            -157.8264024,
+            21.291518
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  AIEA69 (21) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 21,
+        "Circuit": 1,
+        "BusNameTo": "AIEA69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L11"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9167934,
+            21.344246
+          ],
+          [
+            -157.9167934,
+            21.3465058
+          ],
+          [
+            -157.8844854,
+            21.3994501
+          ],
+          [
+            -157.8844854,
+            21.4008402
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  WAIPAHU69 (23) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 23,
+        "Circuit": 1,
+        "BusNameTo": "WAIPAHU69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L12"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9223923,
+            21.344246
+          ],
+          [
+            -157.9223923,
+            21.3465058
+          ],
+          [
+            -157.9719403,
+            21.4065228
+          ],
+          [
+            -157.9719403,
+            21.4087816
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  WAIPAHU69 (23) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 23,
+        "Circuit": 2,
+        "BusNameTo": "WAIPAHU69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L13"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9251918,
+            21.344246
+          ],
+          [
+            -157.9251918,
+            21.3465058
+          ],
+          [
+            -157.9747397,
+            21.4065228
+          ],
+          [
+            -157.9747397,
+            21.4087816
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  WAIPAHU69 (23) CKT 3",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 23,
+        "Circuit": 3,
+        "BusNameTo": "WAIPAHU69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L14"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9279913,
+            21.344246
+          ],
+          [
+            -157.9279913,
+            21.3465058
+          ],
+          [
+            -157.9775392,
+            21.4065228
+          ],
+          [
+            -157.9775392,
+            21.4087816
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  EWA BEACH69 (26) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 26,
+        "Circuit": 1,
+        "BusNameTo": "EWA BEACH69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L15"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9363897,
+            21.344246
+          ],
+          [
+            -157.9363897,
+            21.3465058
+          ],
+          [
+            -158.0131837,
+            21.3338043
+          ],
+          [
+            -158.0131837,
+            21.3360643
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "ALOHA69 (2)  TO  EWA BEACH69 (26) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 2,
+        "BusNumTo": 26,
+        "Circuit": 2,
+        "BusNameTo": "EWA BEACH69",
+        "BusNameFrom": "ALOHA69",
+        "nomkv": 69.0,
+        "Name": "L16"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9391891,
+            21.344246
+          ],
+          [
+            -157.9391891,
+            21.3465058
+          ],
+          [
+            -158.0159832,
+            21.3338043
+          ],
+          [
+            -158.0159832,
+            21.3360643
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "FLOWER69 (3)  TO  HONOLULU69 (6) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 3,
+        "BusNumTo": 6,
+        "Circuit": 1,
+        "BusNameTo": "HONOLULU69",
+        "BusNameFrom": "FLOWER69",
+        "nomkv": 69.0,
+        "Name": "L17"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8739411,
+            21.3427121
+          ],
+          [
+            -157.8739411,
+            21.3413215
+          ],
+          [
+            -157.8303558,
+            21.3188082
+          ],
+          [
+            -157.8303558,
+            21.316548
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "FLOWER69 (3)  TO  HONOLULU69 (6) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 3,
+        "BusNumTo": 6,
+        "Circuit": 2,
+        "BusNameTo": "HONOLULU69",
+        "BusNameFrom": "FLOWER69",
+        "nomkv": 69.0,
+        "Name": "L18"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8758074,
+            21.3427121
+          ],
+          [
+            -157.8758074,
+            21.3413215
+          ],
+          [
+            -157.8331553,
+            21.3188082
+          ],
+          [
+            -157.8331553,
+            21.316548
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "FLOWER69 (3)  TO  PALM69 (16) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 3,
+        "BusNumTo": 16,
+        "Circuit": 1,
+        "BusNameTo": "PALM69",
+        "BusNameFrom": "FLOWER69",
+        "nomkv": 69.0,
+        "Name": "L19"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8720748,
+            21.3427121
+          ],
+          [
+            -157.8720748,
+            21.3413215
+          ],
+          [
+            -157.7498024,
+            21.3124539
+          ],
+          [
+            -157.7498024,
+            21.311063
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "FLOWER69 (3)  TO  PEARL CITY69 (19) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 3,
+        "BusNumTo": 19,
+        "Circuit": 1,
+        "BusNameTo": "PEARL CITY69",
+        "BusNameFrom": "FLOWER69",
+        "nomkv": 69.0,
+        "Name": "L20"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8720748,
+            21.347927
+          ],
+          [
+            -157.8720748,
+            21.3493176
+          ],
+          [
+            -157.9252025,
+            21.4107716
+          ],
+          [
+            -157.9252025,
+            21.4121616
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "FLOWER69 (3)  TO  PEARL CITY69 (19) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 3,
+        "BusNumTo": 19,
+        "Circuit": 2,
+        "BusNameTo": "PEARL CITY69",
+        "BusNameFrom": "FLOWER69",
+        "nomkv": 69.0,
+        "Name": "L21"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8739411,
+            21.347927
+          ],
+          [
+            -157.8739411,
+            21.3493176
+          ],
+          [
+            -157.9270689,
+            21.4107716
+          ],
+          [
+            -157.9270689,
+            21.4121616
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "FLOWER69 (3)  TO  PEARL CITY69 (19) CKT 3",
+        "PWObjectType": "Line",
+        "BusNumFrom": 3,
+        "BusNumTo": 19,
+        "Circuit": 3,
+        "BusNameTo": "PEARL CITY69",
+        "BusNameFrom": "FLOWER69",
+        "nomkv": 69.0,
+        "Name": "L22"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8758074,
+            21.347927
+          ],
+          [
+            -157.8758074,
+            21.3493176
+          ],
+          [
+            -157.9289352,
+            21.4107716
+          ],
+          [
+            -157.9289352,
+            21.4121616
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "FLOWER69 (3)  TO  AIEA69 (21) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 3,
+        "BusNumTo": 21,
+        "Circuit": 1,
+        "BusNameTo": "AIEA69",
+        "BusNameFrom": "FLOWER69",
+        "nomkv": 69.0,
+        "Name": "L23"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8702085,
+            21.347927
+          ],
+          [
+            -157.8702085,
+            21.3493176
+          ],
+          [
+            -157.8826191,
+            21.3994501
+          ],
+          [
+            -157.8826191,
+            21.4008402
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAVE69 (4)  TO  COCONUT69 (13) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 4,
+        "BusNumTo": 13,
+        "Circuit": 1,
+        "BusNameTo": "COCONUT69",
+        "BusNameFrom": "WAVE69",
+        "nomkv": 69.0,
+        "Name": "L24"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8483004,
+            21.2879262
+          ],
+          [
+            -157.8483004,
+            21.286535
+          ],
+          [
+            -157.7822625,
+            21.2920031
+          ],
+          [
+            -157.7822625,
+            21.290612
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "SURF69 (7)  TO  HONOLULU69 (6) CKT 3",
+        "PWObjectType": "Line",
+        "BusNumFrom": 7,
+        "BusNumTo": 6,
+        "Circuit": 3,
+        "BusNameTo": "HONOLULU69",
+        "BusNameFrom": "SURF69",
+        "nomkv": 69.0,
+        "Name": "L29"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8208035,
+            21.291518
+          ],
+          [
+            -157.8208035,
+            21.2929091
+          ],
+          [
+            -157.8359547,
+            21.3055942
+          ],
+          [
+            -157.8359547,
+            21.3078546
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "SURF69 (7)  TO  HONOLULU69 (6) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 7,
+        "BusNumTo": 6,
+        "Circuit": 2,
+        "BusNameTo": "HONOLULU69",
+        "BusNameFrom": "SURF69",
+        "nomkv": 69.0,
+        "Name": "L28"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8226698,
+            21.291518
+          ],
+          [
+            -157.8226698,
+            21.2929091
+          ],
+          [
+            -157.8387542,
+            21.3055942
+          ],
+          [
+            -157.8387542,
+            21.3078546
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "HONOLULU69 (6)  TO  MAHALO69 (11) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 6,
+        "BusNumTo": 11,
+        "Circuit": 1,
+        "BusNameTo": "MAHALO69",
+        "BusNameFrom": "HONOLULU69",
+        "nomkv": 69.0,
+        "Name": "L30"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8275563,
+            21.316548
+          ],
+          [
+            -157.8275563,
+            21.3188082
+          ],
+          [
+            -157.8211964,
+            21.3488748
+          ],
+          [
+            -157.8211964,
+            21.3502654
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "HONOLULU69 (6)  TO  LYCHEE69 (12) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 6,
+        "BusNumTo": 12,
+        "Circuit": 1,
+        "BusNameTo": "LYCHEE69",
+        "BusNameFrom": "HONOLULU69",
+        "nomkv": 69.0,
+        "Name": "L31"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8191579,
+            21.316548
+          ],
+          [
+            -157.8191579,
+            21.3188082
+          ],
+          [
+            -157.8084251,
+            21.3136032
+          ],
+          [
+            -157.8084251,
+            21.3149941
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "HONOLULU69 (6)  TO  LYCHEE69 (12) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 6,
+        "BusNumTo": 12,
+        "Circuit": 2,
+        "BusNameTo": "LYCHEE69",
+        "BusNameFrom": "HONOLULU69",
+        "nomkv": 69.0,
+        "Name": "L32"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8219574,
+            21.316548
+          ],
+          [
+            -157.8219574,
+            21.3188082
+          ],
+          [
+            -157.8102914,
+            21.3136032
+          ],
+          [
+            -157.8102914,
+            21.3149941
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "SURF69 (7)  TO  TURTLE69 (10) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 7,
+        "BusNumTo": 10,
+        "Circuit": 1,
+        "BusNameTo": "TURTLE69",
+        "BusNameFrom": "SURF69",
+        "nomkv": 69.0,
+        "Name": "L33"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8264024,
+            21.2863011
+          ],
+          [
+            -157.8264024,
+            21.2849099
+          ],
+          [
+            -157.8189447,
+            21.2757229
+          ],
+          [
+            -157.8189447,
+            21.273462
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "SURF69 (7)  TO  HONOLULU69 (6) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 7,
+        "BusNumTo": 6,
+        "Circuit": 1,
+        "BusNameTo": "HONOLULU69",
+        "BusNameFrom": "SURF69",
+        "nomkv": 69.0,
+        "Name": "L27"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8245361,
+            21.291518
+          ],
+          [
+            -157.8245361,
+            21.2929091
+          ],
+          [
+            -157.8415537,
+            21.3055942
+          ],
+          [
+            -157.8415537,
+            21.3078546
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "SURF69 (7)  TO  COCONUT69 (13) CKT 3",
+        "PWObjectType": "Line",
+        "BusNumFrom": 7,
+        "BusNumTo": 13,
+        "Circuit": 3,
+        "BusNameTo": "COCONUT69",
+        "BusNameFrom": "SURF69",
+        "nomkv": 69.0,
+        "Name": "L36"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8208035,
+            21.2863011
+          ],
+          [
+            -157.8208035,
+            21.2849099
+          ],
+          [
+            -157.7841288,
+            21.2920031
+          ],
+          [
+            -157.7841288,
+            21.290612
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "SURF69 (7)  TO  COCONUT69 (13) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 7,
+        "BusNumTo": 13,
+        "Circuit": 2,
+        "BusNameTo": "COCONUT69",
+        "BusNameFrom": "SURF69",
+        "nomkv": 69.0,
+        "Name": "L35"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8226698,
+            21.2863011
+          ],
+          [
+            -157.8226698,
+            21.2849099
+          ],
+          [
+            -157.7859951,
+            21.2920031
+          ],
+          [
+            -157.7859951,
+            21.290612
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "SURF69 (7)  TO  COCONUT69 (13) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 7,
+        "BusNumTo": 13,
+        "Circuit": 1,
+        "BusNameTo": "COCONUT69",
+        "BusNameFrom": "SURF69",
+        "nomkv": 69.0,
+        "Name": "L34"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8245361,
+            21.2863011
+          ],
+          [
+            -157.8245361,
+            21.2849099
+          ],
+          [
+            -157.7878614,
+            21.2920031
+          ],
+          [
+            -157.7878614,
+            21.290612
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KANEOHE69 (8)  TO  KAILUA69 (15) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 8,
+        "BusNumTo": 15,
+        "Circuit": 1,
+        "BusNameTo": "KAILUA69",
+        "BusNameFrom": "KANEOHE69",
+        "nomkv": 69.0,
+        "Name": "L37"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8200278,
+            21.4465218
+          ],
+          [
+            -157.8200278,
+            21.4451322
+          ],
+          [
+            -157.7574881,
+            21.397343
+          ],
+          [
+            -157.7574881,
+            21.395084
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KANEOHE69 (8)  TO  PEARL CITY69 (19) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 8,
+        "BusNumTo": 19,
+        "Circuit": 2,
+        "BusNameTo": "PEARL CITY69",
+        "BusNameFrom": "KANEOHE69",
+        "nomkv": 69.0,
+        "Name": "L39"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8218941,
+            21.4465218
+          ],
+          [
+            -157.8218941,
+            21.4451322
+          ],
+          [
+            -157.9345341,
+            21.4187639
+          ],
+          [
+            -157.9345341,
+            21.417374
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KANEOHE69 (8)  TO  PEARL CITY69 (19) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 8,
+        "BusNumTo": 19,
+        "Circuit": 1,
+        "BusNameTo": "PEARL CITY69",
+        "BusNameFrom": "KANEOHE69",
+        "nomkv": 69.0,
+        "Name": "L38"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8237604,
+            21.4465218
+          ],
+          [
+            -157.8237604,
+            21.4451322
+          ],
+          [
+            -157.9364004,
+            21.4187639
+          ],
+          [
+            -157.9364004,
+            21.417374
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "HALEIWA69 (28)  TO  WAIALUA69 (31) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 28,
+        "BusNumTo": 31,
+        "Circuit": 1,
+        "BusNameTo": "WAIALUA69",
+        "BusNameFrom": "HALEIWA69",
+        "nomkv": 69.0,
+        "Name": "L70"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0475444,
+            21.6161619
+          ],
+          [
+            -158.0475444,
+            21.6147739
+          ],
+          [
+            -158.1846844,
+            21.5650285
+          ],
+          [
+            -158.1846844,
+            21.56364
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "MAHALO69 (11)  TO  COCONUT69 (13) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 11,
+        "BusNumTo": 13,
+        "Circuit": 1,
+        "BusNameTo": "COCONUT69",
+        "BusNameFrom": "MAHALO69",
+        "nomkv": 69.0,
+        "Name": "L41"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8193301,
+            21.3502654
+          ],
+          [
+            -157.8193301,
+            21.3488748
+          ],
+          [
+            -157.7803962,
+            21.2920031
+          ],
+          [
+            -157.7803962,
+            21.290612
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "MAHALO69 (11)  TO  KAILUA69 (15) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 11,
+        "BusNumTo": 15,
+        "Circuit": 1,
+        "BusNameTo": "KAILUA69",
+        "BusNameFrom": "MAHALO69",
+        "nomkv": 69.0,
+        "Name": "L42"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8211964,
+            21.35548
+          ],
+          [
+            -157.8211964,
+            21.3568705
+          ],
+          [
+            -157.7574881,
+            21.3841361
+          ],
+          [
+            -157.7574881,
+            21.3863952
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "LYCHEE69 (12)  TO  KAILUA69 (15) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 12,
+        "BusNumTo": 15,
+        "Circuit": 1,
+        "BusNameTo": "KAILUA69",
+        "BusNameFrom": "LYCHEE69",
+        "nomkv": 69.0,
+        "Name": "L43"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8102914,
+            21.32021
+          ],
+          [
+            -157.8102914,
+            21.3216009
+          ],
+          [
+            -157.7518892,
+            21.3841361
+          ],
+          [
+            -157.7518892,
+            21.3863952
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "LYCHEE69 (12)  TO  WAIMANALO69 (17) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 12,
+        "BusNumTo": 17,
+        "Circuit": 1,
+        "BusNameTo": "WAIMANALO69",
+        "BusNameFrom": "LYCHEE69",
+        "nomkv": 69.0,
+        "Name": "L44"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.8084251,
+            21.32021
+          ],
+          [
+            -157.8084251,
+            21.3216009
+          ],
+          [
+            -157.7104574,
+            21.3284069
+          ],
+          [
+            -157.7104574,
+            21.3297977
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "COCONUT69 (13)  TO  PALM69 (16) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 13,
+        "BusNumTo": 16,
+        "Circuit": 1,
+        "BusNameTo": "PALM69",
+        "BusNameFrom": "COCONUT69",
+        "nomkv": 69.0,
+        "Name": "L45"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.7785299,
+            21.290612
+          ],
+          [
+            -157.7785299,
+            21.2920031
+          ],
+          [
+            -157.7498024,
+            21.3044558
+          ],
+          [
+            -157.7498024,
+            21.3058468
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "PALM69 (16)  TO  VOLCANO69 (18) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 16,
+        "BusNumTo": 18,
+        "Circuit": 1,
+        "BusNameTo": "VOLCANO69",
+        "BusNameFrom": "PALM69",
+        "nomkv": 69.0,
+        "Name": "L46"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.7479361,
+            21.3058468
+          ],
+          [
+            -157.7479361,
+            21.3044558
+          ],
+          [
+            -157.6882814,
+            21.2959091
+          ],
+          [
+            -157.6882814,
+            21.294518
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAIMANALO69 (17)  TO  VOLCANO69 (18) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 17,
+        "BusNumTo": 18,
+        "Circuit": 1,
+        "BusNameTo": "VOLCANO69",
+        "BusNameFrom": "WAIMANALO69",
+        "nomkv": 69.0,
+        "Name": "L47"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.7085911,
+            21.3297977
+          ],
+          [
+            -157.7085911,
+            21.3284069
+          ],
+          [
+            -157.6864151,
+            21.2959091
+          ],
+          [
+            -157.6864151,
+            21.294518
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "PEARL CITY69 (19)  TO  WAIPAHU69 (23) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 19,
+        "BusNumTo": 23,
+        "Circuit": 1,
+        "BusNameTo": "WAIPAHU69",
+        "BusNameFrom": "PEARL CITY69",
+        "nomkv": 69.0,
+        "Name": "L48"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9308015,
+            21.4121616
+          ],
+          [
+            -157.9308015,
+            21.4107716
+          ],
+          [
+            -157.9663413,
+            21.4197276
+          ],
+          [
+            -157.9663413,
+            21.417469
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "PEARL CITY69 (19)  TO  WAIPAHU69 (23) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 19,
+        "BusNumTo": 23,
+        "Circuit": 2,
+        "BusNameTo": "WAIPAHU69",
+        "BusNameFrom": "PEARL CITY69",
+        "nomkv": 69.0,
+        "Name": "L49"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9326678,
+            21.4121616
+          ],
+          [
+            -157.9326678,
+            21.4107716
+          ],
+          [
+            -157.9691408,
+            21.4197276
+          ],
+          [
+            -157.9691408,
+            21.417469
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "PEARL CITY69 (19)  TO  WAIPAHU69 (23) CKT 3",
+        "PWObjectType": "Line",
+        "BusNumFrom": 19,
+        "BusNumTo": 23,
+        "Circuit": 3,
+        "BusNameTo": "WAIPAHU69",
+        "BusNameFrom": "PEARL CITY69",
+        "nomkv": 69.0,
+        "Name": "L50"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9345341,
+            21.4121616
+          ],
+          [
+            -157.9345341,
+            21.4107716
+          ],
+          [
+            -157.9719403,
+            21.4197276
+          ],
+          [
+            -157.9719403,
+            21.417469
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "PEARL CITY69 (19)  TO  WAIPAHU69 (23) CKT 4",
+        "PWObjectType": "Line",
+        "BusNumFrom": 19,
+        "BusNumTo": 23,
+        "Circuit": 4,
+        "BusNameTo": "WAIPAHU69",
+        "BusNameFrom": "PEARL CITY69",
+        "nomkv": 69.0,
+        "Name": "L51"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9364004,
+            21.4121616
+          ],
+          [
+            -157.9364004,
+            21.4107716
+          ],
+          [
+            -157.9747397,
+            21.4197276
+          ],
+          [
+            -157.9747397,
+            21.417469
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "MILILANI69 (20)  TO  WAIPAHU69 (23) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 20,
+        "BusNumTo": 23,
+        "Circuit": 1,
+        "BusNameTo": "WAIPAHU69",
+        "BusNameFrom": "MILILANI69",
+        "nomkv": 69.0,
+        "Name": "L52"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9337544,
+            21.4773209
+          ],
+          [
+            -157.9337544,
+            21.4759316
+          ],
+          [
+            -157.9775392,
+            21.4197276
+          ],
+          [
+            -157.9775392,
+            21.417469
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "MILILANI69 (20)  TO  WAHIAWA69 (30) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 20,
+        "BusNumTo": 30,
+        "Circuit": 1,
+        "BusNameTo": "WAHIAWA69",
+        "BusNameFrom": "MILILANI69",
+        "nomkv": 69.0,
+        "Name": "L53"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9337544,
+            21.482531
+          ],
+          [
+            -157.9337544,
+            21.4839203
+          ],
+          [
+            -157.9789174,
+            21.5647946
+          ],
+          [
+            -157.9789174,
+            21.5661831
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "MILILANI69 (20)  TO  HAUULA69 (32) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 20,
+        "BusNumTo": 32,
+        "Circuit": 1,
+        "BusNameTo": "HAUULA69",
+        "BusNameFrom": "MILILANI69",
+        "nomkv": 69.0,
+        "Name": "L54"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9318881,
+            21.482531
+          ],
+          [
+            -157.9318881,
+            21.4839203
+          ],
+          [
+            -157.9049294,
+            21.551154
+          ],
+          [
+            -157.9049294,
+            21.5525426
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAIPAHU69 (23)  TO  SCHOFIELD69 (34) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 23,
+        "BusNumTo": 34,
+        "Circuit": 1,
+        "BusNameTo": "SCHOFIELD69",
+        "BusNameFrom": "WAIPAHU69",
+        "nomkv": 69.0,
+        "Name": "L57"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9803387,
+            21.417469
+          ],
+          [
+            -157.9803387,
+            21.4197276
+          ],
+          [
+            -158.0520345,
+            21.4719004
+          ],
+          [
+            -158.0520345,
+            21.4732898
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAIPAHU69 (23)  TO  SCHOFIELD69 (34) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 23,
+        "BusNumTo": 34,
+        "Circuit": 2,
+        "BusNameTo": "SCHOFIELD69",
+        "BusNameFrom": "WAIPAHU69",
+        "nomkv": 69.0,
+        "Name": "L58"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9831381,
+            21.417469
+          ],
+          [
+            -157.9831381,
+            21.4197276
+          ],
+          [
+            -158.0539008,
+            21.4719004
+          ],
+          [
+            -158.0539008,
+            21.4732898
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KAPOLEI69 (24)  TO  EWA BEACH69 (26) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 24,
+        "BusNumTo": 26,
+        "Circuit": 1,
+        "BusNameTo": "EWA BEACH69",
+        "BusNameFrom": "KAPOLEI69",
+        "nomkv": 69.0,
+        "Name": "L59"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0780068,
+            21.3578917
+          ],
+          [
+            -158.0780068,
+            21.3565012
+          ],
+          [
+            -158.0131837,
+            21.3470158
+          ],
+          [
+            -158.0131837,
+            21.344756
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KAPOLEI69 (24)  TO  EWA BEACH69 (26) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 24,
+        "BusNumTo": 26,
+        "Circuit": 2,
+        "BusNameTo": "EWA BEACH69",
+        "BusNameFrom": "KAPOLEI69",
+        "nomkv": 69.0,
+        "Name": "L60"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0798731,
+            21.3578917
+          ],
+          [
+            -158.0798731,
+            21.3565012
+          ],
+          [
+            -158.0159832,
+            21.3470158
+          ],
+          [
+            -158.0159832,
+            21.344756
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KAPOLEI69 (24)  TO  WAIANAE69 (33) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 24,
+        "BusNumTo": 33,
+        "Circuit": 1,
+        "BusNameTo": "WAIANAE69",
+        "BusNameFrom": "KAPOLEI69",
+        "nomkv": 69.0,
+        "Name": "L61"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0817394,
+            21.363106
+          ],
+          [
+            -158.0817394,
+            21.3644965
+          ],
+          [
+            -158.1664524,
+            21.4620259
+          ],
+          [
+            -158.1664524,
+            21.4634154
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KAPOLEI69 (24)  TO  COGEN69 (36) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 24,
+        "BusNumTo": 36,
+        "Circuit": 1,
+        "BusNameTo": "COGEN69",
+        "BusNameFrom": "KAPOLEI69",
+        "nomkv": 69.0,
+        "Name": "L62"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0817394,
+            21.3578917
+          ],
+          [
+            -158.0817394,
+            21.3565012
+          ],
+          [
+            -158.1134224,
+            21.3130579
+          ],
+          [
+            -158.1134224,
+            21.311667
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "KAHUKU69 (27)  TO  LAIE69 (29) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 27,
+        "BusNumTo": 29,
+        "Circuit": 1,
+        "BusNameTo": "LAIE69",
+        "BusNameFrom": "KAHUKU69",
+        "nomkv": 69.0,
+        "Name": "L67"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9783254,
+            21.6534883
+          ],
+          [
+            -157.9783254,
+            21.6521006
+          ],
+          [
+            -157.9434864,
+            21.619867
+          ],
+          [
+            -157.9434864,
+            21.618479
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "HALEIWA69 (28)  TO  WAHIAWA69 (30) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 28,
+        "BusNumTo": 30,
+        "Circuit": 1,
+        "BusNameTo": "WAHIAWA69",
+        "BusNameFrom": "HALEIWA69",
+        "nomkv": 69.0,
+        "Name": "L68"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0438118,
+            21.6161619
+          ],
+          [
+            -158.0438118,
+            21.6147739
+          ],
+          [
+            -157.9770511,
+            21.5727785
+          ],
+          [
+            -157.9770511,
+            21.57139
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "HALEIWA69 (28)  TO  WAHIAWA69 (30) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 28,
+        "BusNumTo": 30,
+        "Circuit": 2,
+        "BusNameTo": "WAHIAWA69",
+        "BusNameFrom": "HALEIWA69",
+        "nomkv": 69.0,
+        "Name": "L69"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.0456781,
+            21.6161619
+          ],
+          [
+            -158.0456781,
+            21.6147739
+          ],
+          [
+            -157.9789174,
+            21.5727785
+          ],
+          [
+            -157.9789174,
+            21.57139
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "LAIE69 (29)  TO  WAHIAWA69 (30) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 29,
+        "BusNumTo": 30,
+        "Circuit": 1,
+        "BusNameTo": "WAHIAWA69",
+        "BusNameFrom": "LAIE69",
+        "nomkv": 69.0,
+        "Name": "L71"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9434864,
+            21.6132738
+          ],
+          [
+            -157.9434864,
+            21.6118857
+          ],
+          [
+            -157.9751848,
+            21.5727785
+          ],
+          [
+            -157.9751848,
+            21.57139
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "LAIE69 (29)  TO  HAUULA69 (32) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 29,
+        "BusNumTo": 32,
+        "Circuit": 1,
+        "BusNameTo": "HAUULA69",
+        "BusNameFrom": "LAIE69",
+        "nomkv": 69.0,
+        "Name": "L72"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -157.9416201,
+            21.6132738
+          ],
+          [
+            -157.9416201,
+            21.6118857
+          ],
+          [
+            -157.9049294,
+            21.5591386
+          ],
+          [
+            -157.9049294,
+            21.55775
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAIALUA69 (31)  TO  WAIANAE69 (33) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 31,
+        "BusNumTo": 33,
+        "Circuit": 1,
+        "BusNameTo": "WAIANAE69",
+        "BusNameFrom": "WAIALUA69",
+        "nomkv": 69.0,
+        "Name": "L73"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.1846844,
+            21.5584328
+          ],
+          [
+            -158.1846844,
+            21.5570442
+          ],
+          [
+            -158.1664524,
+            21.4700155
+          ],
+          [
+            -158.1664524,
+            21.468626
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAIANAE69 (33)  TO  SCHOFIELD69 (34) CKT 1",
+        "PWObjectType": "Line",
+        "BusNumFrom": 33,
+        "BusNumTo": 34,
+        "Circuit": 1,
+        "BusNameTo": "SCHOFIELD69",
+        "BusNameFrom": "WAIANAE69",
+        "nomkv": 69.0,
+        "Name": "L74"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.1627198,
+            21.468626
+          ],
+          [
+            -158.1627092160828,
+            21.46962496325304
+          ],
+          [
+            -158.0556074906731,
+            21.47134691020169
+          ],
+          [
+            -158.0557671,
+            21.4732898
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "LineName": "WAIANAE69 (33)  TO  SCHOFIELD69 (34) CKT 2",
+        "PWObjectType": "Line",
+        "BusNumFrom": 33,
+        "BusNumTo": 34,
+        "Circuit": 2,
+        "BusNameTo": "SCHOFIELD69",
+        "BusNameFrom": "WAIANAE69",
+        "nomkv": 69.0,
+        "Name": "L75"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -158.1645861,
+            21.468626
+          ],
+          [
+            -158.16459784137984,
+            21.471344957828922
+          ],
+          [
+            -158.05762232520445,
+            21.472621910862255
+          ],
+          [
+            -158.0576334,
+            21.4732898
+          ]
+        ]
+      }
+    }
+  ]
+}

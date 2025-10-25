@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Map from '@/components/Map';
 import ControlPanel from '@/components/ControlPanel';
 import StatsPanel from '@/components/StatsPanel';
+import BusDetailsDrawer from '@/components/BusDetailsDrawer';
 import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,25 +76,26 @@ const Index = () => {
   const [windDirection, setWindDirection] = useState(90);
   const [scenario, setScenario] = useState<'min' | 'nominal' | 'max'>('nominal');
   const [lines, setLines] = useState(mockLines);
+  const [buses, setBuses] = useState<any[]>([]);
   const [stats, setStats] = useState(mockStats);
   const [selectedLine, setSelectedLine] = useState<any>(null);
+  const [selectedBus, setSelectedBus] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Load GeoJSON on mount
+  // Load GeoJSON and buses on mount
   useEffect(() => {
-    const loadGeojson = async () => {
+    const loadData = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('load-grid-data');
-        if (error) throw error;
+        // Load lines
+        const { data: linesData, error: linesError } = await supabase.functions.invoke('load-grid-data');
+        if (linesError) throw linesError;
 
-        if (data?.geojson) {
-          // Store geojson features with geometries
-          const features = data.geojson.features.filter(
+        if (linesData?.geojson) {
+          const features = linesData.geojson.features.filter(
             (f: any) => f.geometry && f.properties.id
           );
           
-          // Initialize lines with default stress values
           const initialLines = features.map((f: any) => ({
             id: f.properties.id,
             name: f.properties.LineName,
@@ -105,17 +107,26 @@ const Index = () => {
           
           setLines(initialLines);
         }
+
+        // Load buses
+        const { data: busesData, error: busesError } = await supabase.functions.invoke('buses');
+        if (busesError) throw busesError;
+
+        if (busesData?.buses) {
+          setBuses(busesData.buses);
+          console.log(`Loaded ${busesData.buses.length} buses`);
+        }
       } catch (error) {
         console.error('Error loading grid data:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load grid geometry.',
+          description: 'Failed to load grid data.',
           variant: 'destructive',
         });
       }
     };
 
-    loadGeojson();
+    loadData();
   }, []);
 
   // Fetch and compute ratings when environmental params change
@@ -203,10 +214,37 @@ const Index = () => {
       conductor: 'ACSR 795',
       mot: 75,
     });
+    setSelectedBus(null);
     
     toast({
       title: line.name,
       description: `Stress: ${line.stress.toFixed(1)}% | Rating: ${line.rating}A`,
+    });
+  };
+
+  const handleBusClick = (bus: any, connectedLines: any[]) => {
+    const sortedLines = connectedLines
+      .sort((a, b) => b.stress - a.stress)
+      .map(line => ({
+        id: line.id,
+        name: line.name,
+        stress: line.stress,
+      }));
+
+    const avgStress = connectedLines.length > 0
+      ? connectedLines.reduce((sum, l) => sum + l.stress, 0) / connectedLines.length
+      : 0;
+
+    setSelectedBus({
+      ...bus,
+      connectedLines: sortedLines,
+      avgStress,
+    });
+    setSelectedLine(null);
+
+    toast({
+      title: bus.name,
+      description: `${bus.v_nom} kV | ${bus.degree} lines | Avg stress: ${avgStress.toFixed(1)}%`,
     });
   };
 
@@ -256,8 +294,17 @@ const Index = () => {
             </div>
 
             {/* Map */}
-            <div className="lg:col-span-6 h-full">
-              <Map lines={lines} onLineClick={handleLineClick} />
+            <div className="lg:col-span-6 h-full relative">
+              <Map 
+                lines={lines} 
+                buses={buses}
+                onLineClick={handleLineClick}
+                onBusClick={handleBusClick}
+              />
+              <BusDetailsDrawer 
+                bus={selectedBus} 
+                onClose={() => setSelectedBus(null)} 
+              />
             </div>
 
             {/* Stats Panel */}
