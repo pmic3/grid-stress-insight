@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertTriangle, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ContingencyIssue {
   line: string;
@@ -30,43 +30,58 @@ export default function ContingencyPanel({
   windSpeed,
   windDirection,
   scenario,
-  onContingencySelect
+  onContingencySelect,
 }: ContingencyPanelProps) {
   const [contingencies, setContingencies] = useState<ContingencyResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedOutage, setSelectedOutage] = useState<string | null>(null);
 
   const getStressColor = (stress: number) => {
-    if (stress < 70) return 'text-green-600';
-    if (stress < 90) return 'text-yellow-600';
-    return 'text-red-600';
+    if (stress < 70) return "text-green-600";
+    if (stress < 90) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getStressLabel = (stress: number) => {
-    if (stress < 70) return 'Safe';
-    if (stress < 90) return 'Warning';
-    return 'Critical';
+    if (stress < 70) return "Safe";
+    if (stress < 90) return "Warning";
+    return "Critical";
   };
 
   const runAnalysis = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('contingency-analysis', {
+      const { data, error } = await supabase.functions.invoke("contingency-analysis", {
         body: {
-          tempC: temperature,
-          windMS: windSpeed,
-          windDeg: windDirection,
-          scenario
-        }
+          tempC: Number(temperature),
+          windMS: Number(windSpeed),
+          windDeg: Number(windDirection),
+          scenario: String(scenario || "nominal"),
+        },
+        headers: { "Content-Type": "application/json" }, // ✅ important
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("invoke error:", error);
+        toast.error(error.message || "Contingency analysis failed");
+        return;
+      }
+      if (!data) {
+        toast.error("No data returned from contingency analysis");
+        return;
+      }
+      if (data.error) {
+        // backend sent structured error
+        console.error("function error:", data.error);
+        toast.error(String(data.error));
+        return;
+      }
 
       setContingencies(data.contingencies || []);
-      toast.success(`Analysis complete: ${data.contingencies?.length || 0} critical contingencies found`);
-    } catch (error) {
-      console.error('Contingency analysis error:', error);
-      toast.error('Failed to run contingency analysis');
+      toast.success(`Analysis complete: ${data.contingencies?.length ?? 0} critical contingencies found`);
+    } catch (err) {
+      console.error("Contingency analysis invoke failed:", err);
+      toast.error("Unexpected error running contingency analysis");
     } finally {
       setLoading(false);
     }
@@ -77,10 +92,7 @@ export default function ContingencyPanel({
     onContingencySelect(contingency.outage, contingency.issues);
   };
 
-  const totalHighStressLines = contingencies.reduce(
-    (sum, c) => sum + c.issues.filter(i => i.stress > 80).length,
-    0
-  );
+  const totalHighStressLines = contingencies.reduce((sum, c) => sum + c.issues.filter((i) => i.stress > 80).length, 0);
 
   return (
     <Card>
@@ -91,52 +103,39 @@ export default function ContingencyPanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button 
-          onClick={runAnalysis} 
-          disabled={loading}
-          className="w-full"
-        >
+        <Button onClick={runAnalysis} disabled={loading} className="w-full">
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Running Analysis...
             </>
           ) : (
-            'Run N-1 Analysis'
+            "Run N-1 Analysis"
           )}
         </Button>
 
         {contingencies.length > 0 && (
           <>
             <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm font-medium">
-                {totalHighStressLines} lines exceed 80% stress under worst outages
-              </p>
+              <p className="text-sm font-medium">{totalHighStressLines} lines exceed 80% stress under worst outages</p>
             </div>
 
             <ScrollArea className="h-[400px]">
               <div className="space-y-3">
                 {contingencies.map((contingency, idx) => (
-                  <Card 
+                  <Card
                     key={idx}
                     className={`cursor-pointer transition-colors hover:bg-muted/50 ${
-                      selectedOutage === contingency.outage ? 'ring-2 ring-primary' : ''
+                      selectedOutage === contingency.outage ? "ring-2 ring-primary" : ""
                     }`}
                     onClick={() => handleContingencyClick(contingency)}
                   >
                     <CardContent className="p-4">
-                      <div className="font-medium text-sm mb-2">
-                        Outage: {contingency.outage}
-                      </div>
+                      <div className="font-medium text-sm mb-2">Outage: {contingency.outage}</div>
                       <div className="space-y-1">
                         {contingency.issues.slice(0, 3).map((issue, issueIdx) => (
-                          <div 
-                            key={issueIdx}
-                            className="flex justify-between items-center text-sm"
-                          >
-                            <span className="text-muted-foreground truncate">
-                              ▸ {issue.line}
-                            </span>
+                          <div key={issueIdx} className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground truncate">▸ {issue.line}</span>
                             <span className={`font-semibold ml-2 ${getStressColor(issue.stress)}`}>
                               {issue.stress}%
                             </span>
