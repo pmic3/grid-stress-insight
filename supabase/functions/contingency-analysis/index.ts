@@ -92,8 +92,8 @@ async function loadGridData(debug = false) {
   const [linesText, flowsText] = await Promise.all([linesRes.text(), flowsRes.text()]);
 
   // Robust CSV parse (handles quotes/commas)
-  const linesRows = (await parse(linesText, { skipFirstRow: false, columns: true })) as LineRow[];
-  const flowsRows = (await parse(flowsText, { skipFirstRow: false, columns: true })) as FlowRow[];
+  const linesRows = (await parse(linesText, { skipFirstRow: true })) as LineRow[];
+  const flowsRows = (await parse(flowsText, { skipFirstRow: true })) as FlowRow[];
 
   // Validate headers exist (defensive)
   const needL = ["name", "bus0", "bus1", "branch_name", "conductor", "MOT"];
