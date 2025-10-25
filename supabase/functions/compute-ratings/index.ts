@@ -257,6 +257,12 @@ serve(async (req) => {
     const stresses = results.map((r) => r.stressPct);
     const systemStats = computeSystemStressIndex(stresses);
 
+    // Debug: log a few sample lines to verify units
+    try {
+      const sample = results.slice(0, 3).map(r => ({ id: r.id, ratingA: r.ratingA, actualA: r.actualA, stressPct: r.stressPct }));
+      console.log('Sample ratings:', JSON.stringify(sample));
+    } catch (_) {}
+
     const response = {
       lines: results,
       system: systemStats,
