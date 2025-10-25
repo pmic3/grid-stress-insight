@@ -110,11 +110,17 @@ const Index = () => {
 
         // Load buses
         const { data: busesData, error: busesError } = await supabase.functions.invoke('buses');
-        if (busesError) throw busesError;
+        if (busesError) {
+          console.error('Bus loading error:', busesError);
+          throw busesError;
+        }
 
         if (busesData?.buses) {
+          console.log('Bus data received:', busesData.buses.length, 'buses');
+          console.log('Sample bus:', busesData.buses[0]);
           setBuses(busesData.buses);
-          console.log(`Loaded ${busesData.buses.length} buses`);
+        } else {
+          console.warn('No buses data in response');
         }
       } catch (error) {
         console.error('Error loading grid data:', error);

@@ -144,7 +144,16 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
   };
 
   const updateBusMarkers = () => {
-    if (!map.current || !map.current.isStyleLoaded() || !buses || buses.length === 0) return;
+    if (!map.current || !map.current.isStyleLoaded() || !buses || buses.length === 0) {
+      console.log('updateBusMarkers skipped:', {
+        hasMap: !!map.current,
+        styleLoaded: map.current?.isStyleLoaded(),
+        busesCount: buses?.length || 0
+      });
+      return;
+    }
+
+    console.log(`Creating markers for ${buses.length} buses`);
 
     // Clear existing markers
     busMarkers.current.forEach(marker => marker.remove());
@@ -227,6 +236,8 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
 
       busMarkers.current.push(marker);
     });
+
+    console.log(`Created ${busMarkers.current.length} bus markers`);
   };
 
   useEffect(() => {
@@ -265,8 +276,19 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
   }, [lines]);
 
   useEffect(() => {
+    console.log('Bus/Line effect triggered:', { busesCount: buses?.length || 0, linesCount: lines.length });
+    
     if (map.current && buses && buses.length > 0) {
-      updateBusMarkers();
+      // Ensure map style is loaded before adding markers
+      if (map.current.isStyleLoaded()) {
+        updateBusMarkers();
+      } else {
+        console.log('Waiting for map style to load...');
+        map.current.once('style.load', () => {
+          console.log('Map style loaded, creating bus markers');
+          updateBusMarkers();
+        });
+      }
     }
   }, [buses, lines]);
 
