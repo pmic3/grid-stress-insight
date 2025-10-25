@@ -26,10 +26,13 @@ interface StatsPanelProps {
     rating: number;
     actual: number;
     stress: number;
-    overloadTemp: number;
-    overloadWind: number;
-    conductor: string;
-    mot: number;
+    nameplateA?: number;
+    deltaPct?: number;
+    overloadTemp?: number | string;
+    overloadWind?: number;
+    conductor?: string;
+    mot?: number;
+    kV?: number;
   } | null;
 }
 
@@ -156,35 +159,65 @@ const StatsPanel = ({ stats, selectedLine }: StatsPanelProps) => {
                 </div>
               </div>
               <div className="p-2 bg-muted/30 rounded">
-                <div className="text-xs text-muted-foreground">Rating</div>
+                <div className="text-xs text-muted-foreground">Dynamic Rating</div>
                 <div className="font-mono text-sm font-semibold text-foreground">
                   {selectedLine.rating.toFixed(0)} A
                 </div>
               </div>
+              {selectedLine.nameplateA && (
+                <>
+                  <div className="p-2 bg-muted/30 rounded">
+                    <div className="text-xs text-muted-foreground">Nameplate Rating</div>
+                    <div className="font-mono text-sm font-semibold text-foreground">
+                      {selectedLine.nameplateA.toFixed(0)} A
+                    </div>
+                  </div>
+                  <div className="p-2 bg-muted/30 rounded">
+                    <div className="text-xs text-muted-foreground">Δ vs Nameplate</div>
+                    <div className={`font-mono text-sm font-bold ${selectedLine.deltaPct && selectedLine.deltaPct > 0 ? 'text-green-500' : 'text-orange-500'}`}>
+                      {selectedLine.deltaPct && selectedLine.deltaPct > 0 ? '+' : ''}{selectedLine.deltaPct?.toFixed(1)}%
+                    </div>
+                  </div>
+                </>
+              )}
               <div className="p-2 bg-muted/30 rounded">
                 <div className="text-xs text-muted-foreground">Stress Level</div>
                 <div className={`font-mono text-sm font-bold ${getStressColor(selectedLine.stress)}`}>
                   {selectedLine.stress.toFixed(1)}%
                 </div>
               </div>
-              <div className="p-2 bg-muted/30 rounded">
-                <div className="text-xs text-muted-foreground">Conductor</div>
-                <div className="text-sm font-semibold text-foreground">
-                  {selectedLine.conductor}
+              {selectedLine.kV && (
+                <div className="p-2 bg-muted/30 rounded">
+                  <div className="text-xs text-muted-foreground">Voltage</div>
+                  <div className="text-sm font-semibold text-foreground">
+                    {selectedLine.kV.toFixed(1)} kV
+                  </div>
                 </div>
-              </div>
-              <div className="p-2 bg-muted/30 rounded">
-                <div className="text-xs text-muted-foreground">MOT</div>
-                <div className="text-sm font-semibold text-foreground">
-                  {selectedLine.mot}°C
+              )}
+              {selectedLine.conductor && (
+                <div className="p-2 bg-muted/30 rounded">
+                  <div className="text-xs text-muted-foreground">Conductor</div>
+                  <div className="text-sm font-semibold text-foreground">
+                    {selectedLine.conductor}
+                  </div>
                 </div>
-              </div>
-              <div className="p-2 bg-muted/30 rounded">
-                <div className="text-xs text-muted-foreground">Overload Temp</div>
-                <div className="text-sm font-semibold text-warning">
-                  {selectedLine.overloadTemp.toFixed(1)}°C
+              )}
+              {selectedLine.mot && (
+                <div className="p-2 bg-muted/30 rounded">
+                  <div className="text-xs text-muted-foreground">MOT</div>
+                  <div className="text-sm font-semibold text-foreground">
+                    {selectedLine.mot}°C
+                  </div>
                 </div>
-              </div>
+              )}
+              {selectedLine.overloadTemp && typeof selectedLine.overloadTemp === 'number' && (
+                <div className="p-2 bg-muted/30 rounded">
+                  <div className="text-xs text-muted-foreground">Overload Temp</div>
+                  <div className="text-sm font-semibold text-warning">
+                    {selectedLine.overloadTemp.toFixed(1)}°C
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </Card>

@@ -80,6 +80,7 @@ const Index = () => {
   const [stats, setStats] = useState(mockStats);
   const [selectedLine, setSelectedLine] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Load GeoJSON on mount
