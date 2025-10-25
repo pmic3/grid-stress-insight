@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Map as MapIcon } from 'lucide-react';
-import { Button } from './ui/button';
 
 interface LineData {
   id: string;
@@ -23,28 +21,6 @@ const MAPBOX_TOKEN = 'pk.eyJ1IjoicG1pY29uaSIsImEiOiJjbWNiMGJiMzUwOHY0MmxwejJhazh
 const Map = ({ lines, onLineClick }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite'>('dark');
-
-  const toggleMapStyle = () => {
-    if (!map.current) return;
-    
-    const newStyle = mapStyle === 'dark' ? 'satellite' : 'dark';
-    const styleUrl = newStyle === 'dark' 
-      ? 'mapbox://styles/mapbox/dark-v11'
-      : 'mapbox://styles/mapbox/satellite-streets-v12';
-    
-    setMapStyle(newStyle);
-    map.current.setStyle(styleUrl);
-    
-    // Re-add lines after style loads
-    map.current.once('styledata', () => {
-      if (map.current?.isStyleLoaded()) {
-        setTimeout(() => {
-          updateMapLines();
-        }, 100);
-      }
-    });
-  };
 
   const initializeMap = () => {
     if (!mapContainer.current || map.current) return;
@@ -184,15 +160,6 @@ const Map = ({ lines, onLineClick }: MapProps) => {
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg overflow-hidden" />
-      <Button
-        onClick={toggleMapStyle}
-        size="icon"
-        variant="secondary"
-        className="absolute top-4 right-4 z-10 bg-card/90 backdrop-blur-sm border border-border hover:bg-card"
-        title={`Switch to ${mapStyle === 'dark' ? 'satellite' : 'dark'} view`}
-      >
-        <MapIcon className="h-4 w-4" />
-      </Button>
       <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-4 py-2">
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
