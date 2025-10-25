@@ -82,20 +82,30 @@ function computeLineStress(actualA: number, ratingA: number): number {
 }
 
 async function loadGridData(): Promise<Map<string, LineData>> {
-  // Use same GitHub source as load-grid-data function
+  // Use same GitHub source as other functions
   const GITHUB_BASE = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/csv/";
+  
+  console.log('Fetching grid data from GitHub...');
   
   const [linesRes, flowsRes] = await Promise.all([
     fetch(`${GITHUB_BASE}lines.csv`),
     fetch(`${GITHUB_BASE}line_flows_nominal.csv`)
   ]);
   
-  if (!linesRes.ok || !flowsRes.ok) {
-    throw new Error('Failed to fetch grid data from GitHub');
+  if (!linesRes.ok) {
+    console.error(`Failed to fetch lines.csv: ${linesRes.status} ${linesRes.statusText}`);
+    throw new Error(`Failed to fetch lines.csv: ${linesRes.status}`);
+  }
+  
+  if (!flowsRes.ok) {
+    console.error(`Failed to fetch line_flows_nominal.csv: ${flowsRes.status} ${flowsRes.statusText}`);
+    throw new Error(`Failed to fetch line_flows_nominal.csv: ${flowsRes.status}`);
   }
   
   const linesText = await linesRes.text();
   const flowsText = await flowsRes.text();
+  
+  console.log('Successfully fetched CSV data');
 
   const linesRows = linesText.trim().split('\n').slice(1);
   const flowsRows = flowsText.trim().split('\n').slice(1);

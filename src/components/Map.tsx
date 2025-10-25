@@ -36,6 +36,18 @@ const Map = ({ lines, buses, onLineClick, onBusClick, contingencyOutage, conting
   const map = useRef<mapboxgl.Map | null>(null);
   const busMarkers = useRef<mapboxgl.Marker[]>([]);
 
+  // Initialize map once
+  useEffect(() => {
+    initializeMap();
+  }, []);
+
+  // Update bus markers whenever buses or lines change
+  useEffect(() => {
+    if (!map.current || !map.current.isStyleLoaded() || !buses || buses.length === 0) return;
+    console.log(`Updating bus markers: ${buses.length} buses`);
+    updateBusMarkers();
+  }, [buses, lines]);
+
   const initializeMap = () => {
     if (!mapContainer.current || map.current) return;
 
@@ -318,15 +330,11 @@ const Map = ({ lines, buses, onLineClick, onBusClick, contingencyOutage, conting
     };
   }, []);
 
+  // Update lines when they change or contingency changes
   useEffect(() => {
     if (map.current && map.current.isStyleLoaded()) {
+      console.log('Lines or contingency changed, updating lines');
       updateMapLines();
-      
-      // Re-add bus markers after updating lines
-      if (buses && buses.length > 0) {
-        console.log('Re-adding bus markers after line update');
-        updateBusMarkers();
-      }
       
       // Fit map to bounds of all lines on first load
       if (lines.length > 0) {
@@ -348,22 +356,6 @@ const Map = ({ lines, buses, onLineClick, onBusClick, contingencyOutage, conting
       }
     }
   }, [lines, contingencyOutage, contingencyIssues]);
-
-  useEffect(() => {
-    if (map.current && buses && buses.length > 0) {
-      console.log(`Bus useEffect: ${buses.length} buses, map style loaded: ${map.current.isStyleLoaded()}`);
-      if (map.current.isStyleLoaded()) {
-        updateBusMarkers();
-      } else {
-        // Wait for next style load
-        const handler = () => {
-          console.log('Style loaded, now adding bus markers');
-          updateBusMarkers();
-        };
-        map.current.once('styledata', handler);
-      }
-    }
-  }, [buses, lines, contingencyOutage, contingencyIssues]);
 
   return (
     <div className="relative w-full h-full">
