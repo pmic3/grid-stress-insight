@@ -82,14 +82,20 @@ function computeLineStress(actualA: number, ratingA: number): number {
 }
 
 async function loadGridData(): Promise<Map<string, LineData>> {
-  // Read local CSV files from _shared/data directory
-  const decoder = new TextDecoder("utf-8");
+  // Use same GitHub source as load-grid-data function
+  const GITHUB_BASE = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/csv/";
   
-  const linesData = await Deno.readFile("../supabase/functions/_shared/data/lines.csv");
-  const flowsData = await Deno.readFile("../supabase/functions/_shared/data/line_flows_nominal.csv");
+  const [linesRes, flowsRes] = await Promise.all([
+    fetch(`${GITHUB_BASE}lines.csv`),
+    fetch(`${GITHUB_BASE}line_flows_nominal.csv`)
+  ]);
   
-  const linesText = decoder.decode(linesData);
-  const flowsText = decoder.decode(flowsData);
+  if (!linesRes.ok || !flowsRes.ok) {
+    throw new Error('Failed to fetch grid data from GitHub');
+  }
+  
+  const linesText = await linesRes.text();
+  const flowsText = await flowsRes.text();
 
   const linesRows = linesText.trim().split('\n').slice(1);
   const flowsRows = flowsText.trim().split('\n').slice(1);

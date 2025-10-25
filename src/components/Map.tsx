@@ -322,6 +322,12 @@ const Map = ({ lines, buses, onLineClick, onBusClick, contingencyOutage, conting
     if (map.current && map.current.isStyleLoaded()) {
       updateMapLines();
       
+      // Re-add bus markers after updating lines
+      if (buses && buses.length > 0) {
+        console.log('Re-adding bus markers after line update');
+        updateBusMarkers();
+      }
+      
       // Fit map to bounds of all lines on first load
       if (lines.length > 0) {
         const bounds = new mapboxgl.LngLatBounds();
@@ -357,7 +363,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick, contingencyOutage, conting
         map.current.once('styledata', handler);
       }
     }
-  }, [buses, lines]);
+  }, [buses, lines, contingencyOutage, contingencyIssues]);
 
   return (
     <div className="relative w-full h-full">
