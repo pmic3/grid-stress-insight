@@ -51,10 +51,6 @@ export default function ContingencyPanel({
   const runAnalysis = async () => {
     setLoading(true);
     try {
-      // TEMP DEBUG — test backend directly without invoke()
-      await testWithGET(temperature, windSpeed, windDirection, scenario);
-      // You can comment this out once you verify it prints valid JSON
-
       const { data, error } = await supabase.functions.invoke("contingency-analysis", {
         body: {
           tempC: Number(temperature),
@@ -62,7 +58,7 @@ export default function ContingencyPanel({
           windDeg: Number(windDirection),
           scenario: String(scenario || "nominal"),
         },
-        headers: { "Content-Type": "application/json" }, // ✅ critical
+        headers: { "Content-Type": "application/json" }, // ✅ important
       });
 
       if (error) {
