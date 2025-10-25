@@ -188,7 +188,8 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
       el.style.border = '2px solid rgba(0, 0, 0, 0.4)';
       el.style.cursor = 'pointer';
       el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-      el.style.transition = 'all 0.2s';
+      el.style.transition = 'transform 0.2s';
+      el.style.position = 'relative';
 
       // Add alert badge if high stress
       if (hasHighStress) {
@@ -202,13 +203,16 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
         el.appendChild(badge);
       }
 
-      // Hover effect
+      // Hover effect - preserve Mapbox's transform (translate) and only add scale
       el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.3)';
+        const base = el.style.transform || getComputedStyle(el).transform || '';
+        (el as any).dataset.baseTransform = base;
+        el.style.transform = `${base} scale(1.3)`;
         el.style.zIndex = '1000';
       });
       el.addEventListener('mouseleave', () => {
-        el.style.transform = 'scale(1)';
+        const base = (el as any).dataset.baseTransform || '';
+        el.style.transform = base;
         el.style.zIndex = '1';
       });
 
