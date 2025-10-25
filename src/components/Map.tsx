@@ -144,7 +144,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
   };
 
   const updateBusMarkers = () => {
-    if (!map.current || !map.current.isStyleLoaded()) return;
+    if (!map.current || !map.current.isStyleLoaded() || !buses || buses.length === 0) return;
 
     // Clear existing markers
     busMarkers.current.forEach(marker => marker.remove());
@@ -265,7 +265,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
   }, [lines]);
 
   useEffect(() => {
-    if (map.current && buses.length > 0) {
+    if (map.current && buses && buses.length > 0) {
       updateBusMarkers();
     }
   }, [buses, lines]);

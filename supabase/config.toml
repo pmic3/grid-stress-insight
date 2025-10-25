@@ -1,1 +1,10 @@
 project_id = "mtpzfxbpkcccjonkelib"
+
+[functions.buses]
+verify_jwt = false
+
+[functions.load-grid-data]
+verify_jwt = false
+
+[functions.compute-ratings]
+verify_jwt = false
