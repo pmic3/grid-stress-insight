@@ -178,18 +178,25 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
         .filter(line => line.name.includes(bus.name))
         .some(line => line.stress > 95);
 
-      // Create marker element
+      // Create marker container and inner dot (avoid overriding Mapbox transforms)
       const el = document.createElement('div');
       el.className = 'bus-marker';
-      el.style.width = `${bus.degree >= 5 ? 12 : 8}px`;
-      el.style.height = `${bus.degree >= 5 ? 12 : 8}px`;
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = getBusColor(bus.v_nom);
-      el.style.border = '2px solid rgba(0, 0, 0, 0.4)';
       el.style.cursor = 'pointer';
       el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-      el.style.transition = 'transform 0.2s';
-      el.style.position = 'relative';
+      el.style.transition = 'none';
+
+      const dot = document.createElement('div');
+      const size = bus.degree >= 5 ? 12 : 8;
+      dot.style.width = `${size}px`;
+      dot.style.height = `${size}px`;
+      dot.style.borderRadius = '50%';
+      dot.style.backgroundColor = getBusColor(bus.v_nom);
+      dot.style.border = '2px solid rgba(0, 0, 0, 0.4)';
+      dot.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+      dot.style.position = 'relative';
+      dot.style.transition = 'transform 0.2s';
+
+      el.appendChild(dot);
 
       // Add alert badge if high stress
       if (hasHighStress) {
@@ -200,19 +207,16 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
         badge.style.right = '-8px';
         badge.style.fontSize = '10px';
         badge.style.lineHeight = '1';
-        el.appendChild(badge);
+        dot.appendChild(badge);
       }
 
-      // Hover effect - preserve Mapbox's transform (translate) and only add scale
+      // Hover effect on inner dot only, don't touch Mapbox transform on container
       el.addEventListener('mouseenter', () => {
-        const base = el.style.transform || getComputedStyle(el).transform || '';
-        (el as any).dataset.baseTransform = base;
-        el.style.transform = `${base} scale(1.3)`;
+        (el.firstChild as HTMLDivElement).style.transform = 'scale(1.3)';
         el.style.zIndex = '1000';
       });
       el.addEventListener('mouseleave', () => {
-        const base = (el as any).dataset.baseTransform || '';
-        el.style.transform = base;
+        (el.firstChild as HTMLDivElement).style.transform = 'scale(1)';
         el.style.zIndex = '1';
       });
 
