@@ -3,6 +3,7 @@ import Map from '@/components/Map';
 import ControlPanel from '@/components/ControlPanel';
 import StatsPanel from '@/components/StatsPanel';
 import BusDetailsDrawer from '@/components/BusDetailsDrawer';
+import ContingencyPanel from '@/components/ContingencyPanel';
 import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,6 +82,8 @@ const Index = () => {
   const [selectedLine, setSelectedLine] = useState<any>(null);
   const [selectedBus, setSelectedBus] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [contingencyOutage, setContingencyOutage] = useState<string | null>(null);
+  const [contingencyIssues, setContingencyIssues] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Load GeoJSON and buses on mount
@@ -268,6 +271,15 @@ const Index = () => {
     });
   };
 
+  const handleContingencySelect = (outage: string, issues: any[]) => {
+    setContingencyOutage(outage);
+    setContingencyIssues(issues);
+    toast({
+      title: 'Contingency Selected',
+      description: `Outage: ${outage} affects ${issues.length} lines`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background grid */}
@@ -300,7 +312,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-180px)]">
             {/* Control Panel */}
-            <div className="lg:col-span-3 overflow-y-auto">
+            <div className="lg:col-span-3 overflow-y-auto space-y-4">
               <ControlPanel
                 temperature={temperature}
                 windSpeed={windSpeed}
@@ -311,6 +323,13 @@ const Index = () => {
                 onWindDirectionChange={setWindDirection}
                 onScenarioChange={setScenario}
               />
+              <ContingencyPanel
+                temperature={temperature}
+                windSpeed={windSpeed}
+                windDirection={windDirection}
+                scenario={scenario}
+                onContingencySelect={handleContingencySelect}
+              />
             </div>
 
             {/* Map */}
@@ -320,6 +339,8 @@ const Index = () => {
                 buses={buses}
                 onLineClick={handleLineClick}
                 onBusClick={handleBusClick}
+                contingencyOutage={contingencyOutage}
+                contingencyIssues={contingencyIssues}
               />
               <BusDetailsDrawer 
                 bus={selectedBus} 

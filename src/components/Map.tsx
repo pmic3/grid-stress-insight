@@ -25,11 +25,13 @@ interface MapProps {
   buses: BusData[];
   onLineClick?: (line: LineData) => void;
   onBusClick?: (bus: BusData, connectedLines: any[]) => void;
+  contingencyOutage?: string | null;
+  contingencyIssues?: Array<{line: string; stress: number}>;
 }
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoicG1pY29uaSIsImEiOiJjbWNiMGJiMzUwOHY0MmxwejJhazhjcTd6In0.pNow26taTw3mku-wCPQCwA';
 
-const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
+const Map = ({ lines, buses, onLineClick, onBusClick, contingencyOutage, contingencyIssues }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const busMarkers = useRef<mapboxgl.Marker[]>([]);
@@ -84,6 +86,12 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
     if (map.current.getLayer('transmission-lines')) {
       map.current.removeLayer('transmission-lines');
     }
+    if (map.current.getLayer('contingency-outage-line')) {
+      map.current.removeLayer('contingency-outage-line');
+    }
+    if (map.current.getLayer('contingency-affected-lines')) {
+      map.current.removeLayer('contingency-affected-lines');
+    }
     if (map.current.getSource('lines')) {
       map.current.removeSource('lines');
     }
@@ -91,17 +99,24 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
     // Create GeoJSON from lines data
     const geojson: GeoJSON.FeatureCollection = {
       type: 'FeatureCollection',
-      features: lines.map(line => ({
-        type: 'Feature',
-        properties: {
-          id: line.id,
-          name: line.name,
-          stress: line.stress,
-          rating: line.rating,
-          actual: line.actual,
-        },
-        geometry: line.geometry,
-      })),
+      features: lines.map(line => {
+        const isOutage = contingencyOutage && line.name.includes(contingencyOutage);
+        const isAffected = contingencyIssues?.some(issue => line.name.includes(issue.line));
+        
+        return {
+          type: 'Feature',
+          properties: {
+            id: line.id,
+            name: line.name,
+            stress: line.stress,
+            rating: line.rating,
+            actual: line.actual,
+            isOutage: isOutage || false,
+            isAffected: isAffected || false,
+          },
+          geometry: line.geometry,
+        };
+      }),
     };
 
     map.current.addSource('lines', {
@@ -114,24 +129,56 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
       stress: f.properties?.stress 
     })));
 
+    // Main transmission lines layer
     map.current.addLayer({
       id: 'transmission-lines',
       type: 'line',
       source: 'lines',
+      filter: ['!', ['get', 'isOutage']],
       paint: {
         'line-color': [
           'case',
-          ['<', ['get', 'stress'], 70], '#2FB56F',
-          ['<', ['get', 'stress'], 90], '#E0C400',
-          ['<', ['get', 'stress'], 100], '#FF7B00',
-          '#E02F2F'
+          ['get', 'isAffected'],
+          [
+            'case',
+            ['<', ['get', 'stress'], 70], '#2FB56F',
+            ['<', ['get', 'stress'], 90], '#E0C400',
+            ['<', ['get', 'stress'], 100], '#FF7B00',
+            '#E02F2F'
+          ],
+          [
+            'case',
+            ['<', ['get', 'stress'], 70], '#2FB56F',
+            ['<', ['get', 'stress'], 90], '#E0C400',
+            ['<', ['get', 'stress'], 100], '#FF7B00',
+            '#E02F2F'
+          ]
         ],
         'line-width': [
           'case',
+          ['get', 'isAffected'], 5,
           ['>', ['get', 'stress'], 100], 4,
           3
         ],
-        'line-opacity': 0.8,
+        'line-opacity': [
+          'case',
+          ['get', 'isAffected'], 1.0,
+          0.8
+        ],
+      },
+    });
+
+    // Contingency outage line (gray dashed)
+    map.current.addLayer({
+      id: 'contingency-outage-line',
+      type: 'line',
+      source: 'lines',
+      filter: ['get', 'isOutage'],
+      paint: {
+        'line-color': '#888888',
+        'line-width': 4,
+        'line-opacity': 0.6,
+        'line-dasharray': [2, 2],
       },
     });
 
@@ -294,7 +341,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick }: MapProps) => {
         }
       }
     }
-  }, [lines]);
+  }, [lines, contingencyOutage, contingencyIssues]);
 
   useEffect(() => {
     if (map.current && buses && buses.length > 0) {
