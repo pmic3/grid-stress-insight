@@ -29,7 +29,7 @@ const Map = ({ lines, onLineClick }: MapProps) => {
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: [-157.8, 21.3], // Hawaii coordinates
       zoom: 8,
       pitch: 0,
