@@ -27,12 +27,12 @@ async function loadBuses() {
   console.log("Loading buses and lines data...");
   
   // Load buses
-  const busesPath = new URL('./_shared/data/buses.csv', import.meta.url).pathname;
+  const busesPath = new URL('../_shared/data/buses.csv', import.meta.url).pathname;
   const busesText = await Deno.readTextFile(busesPath);
   const busesData = parseCSV(busesText);
   
   // Load lines to compute degree (number of connected lines per bus)
-  const linesPath = new URL('./_shared/data/lines.csv', import.meta.url).pathname;
+  const linesPath = new URL('../_shared/data/lines.csv', import.meta.url).pathname;
   const linesText = await Deno.readTextFile(linesPath);
   const linesData = parseCSV(linesText);
   
