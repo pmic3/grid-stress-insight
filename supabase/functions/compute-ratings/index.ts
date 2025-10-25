@@ -158,31 +158,35 @@ serve(async (req) => {
     const gridData = await gridDataResponse.json();
     console.log('Loaded grid data:', { lineCount: gridData.lines?.length });
 
-    // Process each line from the grid data
-    const lines = gridData.lines.map((line: any) => {
-      // Extract azimuth from geometry if available
-      let azimuth = 90; // default
-      if (line.geometry?.coordinates?.length >= 2) {
-        const [lon1, lat1] = line.geometry.coordinates[0];
-        const [lon2, lat2] = line.geometry.coordinates[1];
-        const dLon = lon2 - lon1;
-        const dLat = lat2 - lat1;
-        azimuth = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
-      }
+    // Process each line from the grid data - filter out lines without geometry
+    const lines = gridData.lines
+      .filter((line: any) => line.geometry && line.geometry.coordinates)
+      .map((line: any) => {
+        // Extract azimuth from geometry if available
+        let azimuth = 90; // default
+        if (line.geometry?.coordinates?.length >= 2) {
+          const [lon1, lat1] = line.geometry.coordinates[0];
+          const [lon2, lat2] = line.geometry.coordinates[1];
+          const dLon = lon2 - lon1;
+          const dLat = lat2 - lat1;
+          azimuth = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+        }
 
-      return {
-        id: line.id,
-        name: line.name || `Line ${line.id}`,
-        conductor: line.conductor || 'ACSR 795',
-        mot: 75, // Maximum Operating Temperature
-        azimuth,
-        nominalMVA: line.s_nom || 150,
-        kV: 115, // Assuming 115kV system
-        actualMVA: line.p0_nominal || line.s_nom * 0.9,
-        geometry: line.geometry,
-        coordinates: line.geometry?.coordinates,
-      };
-    });
+        return {
+          id: line.id,
+          name: line.name || `Line ${line.id}`,
+          conductor: line.conductor || 'ACSR 795',
+          mot: line.mot || 75,
+          azimuth,
+          nominalMVA: line.s_nom || 150,
+          kV: 115, // Assuming 115kV system
+          actualMVA: line.p0_nominal || line.s_nom * 0.9,
+          geometry: line.geometry,
+          coordinates: line.geometry.coordinates,
+        };
+      });
+
+    console.log(`Processing ${lines.length} lines with valid geometries`);
 
     const results = lines.map((line: any) => {
       const conductor = conductorLibrary[line.conductor] || conductorLibrary['ACSR 795'];

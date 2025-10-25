@@ -97,22 +97,24 @@ const Index = () => {
         if (error) throw error;
 
         if (data && data.lines) {
-          // Transform backend response to frontend format
-          const transformedLines = data.lines.map((line: any) => ({
-            id: line.id,
-            name: line.name,
-            geometry: line.geometry || {
-              type: 'LineString',
-              coordinates: line.coordinates || [[-157.8, 21.3], [-157.7, 21.2]],
-            },
-            stress: line.stressPct,
-            rating: line.ratingA,
-            actual: line.actualA,
-            conductor: line.conductor,
-            mot: line.mot,
-            overloadTemp: line.overloadTemp,
-          }));
+          console.log('Received data:', { lineCount: data.lines.length, firstLine: data.lines[0] });
           
+          // Transform backend response to frontend format
+          const transformedLines = data.lines
+            .filter((line: any) => line.geometry && line.geometry.coordinates)
+            .map((line: any) => ({
+              id: line.id,
+              name: line.name,
+              geometry: line.geometry,
+              stress: line.stressPct,
+              rating: line.ratingA,
+              actual: line.actualA,
+              conductor: line.conductor,
+              mot: line.mot,
+              overloadTemp: line.overloadTemp,
+            }));
+          
+          console.log('Transformed lines:', { count: transformedLines.length });
           setLines(transformedLines);
           
           if (data.system) {
