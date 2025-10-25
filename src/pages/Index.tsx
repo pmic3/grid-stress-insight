@@ -4,6 +4,7 @@ import ControlPanel from '@/components/ControlPanel';
 import StatsPanel from '@/components/StatsPanel';
 import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mock data for initial display
 const mockLines = [
@@ -76,16 +77,74 @@ const Index = () => {
   const [lines, setLines] = useState(mockLines);
   const [stats, setStats] = useState(mockStats);
   const [selectedLine, setSelectedLine] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Fetch and compute ratings when environmental params change
   useEffect(() => {
-    // TODO: Call backend to compute ratings when environmental params change
-    // For now, we'll simulate some updates
-    const updatedLines = mockLines.map(line => ({
-      ...line,
-      stress: Math.min(100, line.stress + (temperature - 25) * 0.5 - (windSpeed - 5) * 0.3),
-    }));
-    setLines(updatedLines);
+    const computeRatings = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('compute-ratings', {
+          body: {
+            tempC: temperature,
+            windMS: windSpeed,
+            windDeg: windDirection,
+            scenario: scenario,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data && data.lines) {
+          // Transform backend response to frontend format
+          const transformedLines = data.lines.map((line: any) => ({
+            id: line.id,
+            name: line.name,
+            geometry: line.geometry || {
+              type: 'LineString',
+              coordinates: line.coordinates || [[-157.8, 21.3], [-157.7, 21.2]],
+            },
+            stress: line.stressPct,
+            rating: line.ratingA,
+            actual: line.actualA,
+            conductor: line.conductor,
+            mot: line.mot,
+            overloadTemp: line.overloadTemp,
+          }));
+          
+          setLines(transformedLines);
+          
+          if (data.system) {
+            setStats({
+              systemStressIndex: data.system.ssi,
+              stressBands: data.system.bands,
+              avgStress: data.system.avgStress,
+              maxStress: data.system.maxStress,
+              firstToFail: transformedLines
+                .sort((a: any, b: any) => b.stress - a.stress)
+                .slice(0, 3)
+                .map((line: any) => ({
+                  name: line.name,
+                  overloadTemp: line.overloadTemp || 30,
+                  stress: line.stress,
+                })),
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error computing ratings:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to compute line ratings. Using mock data.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    computeRatings();
   }, [temperature, windSpeed, windDirection, scenario]);
 
   const handleLineClick = (line: any) => {

@@ -143,20 +143,54 @@ serve(async (req) => {
     
     console.log('Computing ratings:', { tempC, windMS, windDeg, scenario });
 
-    // Mock line data (in production, load from CSV/GeoJSON)
-    const lines = [
-      { id: 'L1', name: 'Line 1-2', conductor: 'ACSR 795', mot: 75, azimuth: 45, nominalMVA: 150, kV: 115, scenario: { min: 0.85, nominal: 1.0, max: 1.15 } },
-      { id: 'L2', name: 'Line 2-3', conductor: 'ACSR 795', mot: 75, azimuth: 90, nominalMVA: 120, kV: 115, scenario: { min: 0.85, nominal: 1.0, max: 1.15 } },
-      { id: 'L3', name: 'Line 3-4', conductor: 'ACSR 1033', mot: 75, azimuth: 135, nominalMVA: 200, kV: 115, scenario: { min: 0.85, nominal: 1.0, max: 1.15 } },
-      { id: 'L4', name: 'Line 4-5', conductor: 'ACSR 477', mot: 75, azimuth: 180, nominalMVA: 100, kV: 115, scenario: { min: 0.85, nominal: 1.0, max: 1.15 } },
-    ];
+    // Fetch grid data from load-grid-data function
+    const gridDataUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/load-grid-data`;
+    const gridDataResponse = await fetch(gridDataUrl, {
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+      },
+    });
 
-    const results = lines.map(line => {
-      const conductor = conductorLibrary[line.conductor];
+    if (!gridDataResponse.ok) {
+      throw new Error('Failed to fetch grid data');
+    }
+
+    const gridData = await gridDataResponse.json();
+    console.log('Loaded grid data:', { lineCount: gridData.lines?.length });
+
+    // Process each line from the grid data
+    const lines = gridData.lines.map((line: any) => {
+      // Extract azimuth from geometry if available
+      let azimuth = 90; // default
+      if (line.geometry?.coordinates?.length >= 2) {
+        const [lon1, lat1] = line.geometry.coordinates[0];
+        const [lon2, lat2] = line.geometry.coordinates[1];
+        const dLon = lon2 - lon1;
+        const dLat = lat2 - lat1;
+        azimuth = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+      }
+
+      return {
+        id: line.id,
+        name: line.name || `Line ${line.id}`,
+        conductor: line.conductor || 'ACSR 795',
+        mot: 75, // Maximum Operating Temperature
+        azimuth,
+        nominalMVA: line.s_nom || 150,
+        kV: 115, // Assuming 115kV system
+        actualMVA: line.p0_nominal || line.s_nom * 0.9,
+        geometry: line.geometry,
+        coordinates: line.geometry?.coordinates,
+      };
+    });
+
+    const results = lines.map((line: any) => {
+      const conductor = conductorLibrary[line.conductor] || conductorLibrary['ACSR 795'];
       const attackAngle = computeAttackAngle(windDeg, line.azimuth);
       
       // Convert MVA to Amps: MVA * 1000 / (sqrt(3) * kV)
-      const actualMVA = line.nominalMVA * line.scenario[scenario];
+      const scenarioMultiplier = { min: 0.85, nominal: 1.0, max: 1.15 };
+      const actualMVA = line.actualMVA * scenarioMultiplier[scenario];
       const actualA = (actualMVA * 1000) / (Math.sqrt(3) * line.kV);
       
       const ratingA = ieee738Ampacity(tempC, windMS, attackAngle, line.mot, conductor);
@@ -172,10 +206,12 @@ serve(async (req) => {
         overloadTemp,
         conductor: line.conductor,
         mot: line.mot,
+        geometry: line.geometry,
+        coordinates: line.coordinates,
       };
     });
 
-    const stresses = results.map(r => r.stressPct);
+    const stresses = results.map((r: any) => r.stressPct);
     const systemStats = computeSystemStressIndex(stresses);
 
     const response = {
