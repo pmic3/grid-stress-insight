@@ -44,6 +44,22 @@ const conductorLibrary: Record<string, { diam_mm: number; r25_ohm_km: number; al
   "1272 ACSR 45/7 BITTERN": { diam_mm: 35.1, r25_ohm_km: 0.04559, alpha: 0.00404 },
   "336.4 ACSR 30/7 ORIOLE": { diam_mm: 17.9, r25_ohm_km: 0.1723, alpha: 0.00404 },
 };
+// TEMPORARY DEBUG HELPER
+async function testWithGET(temp: number, windMS: number, windDeg: number, scenario: string) {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const url =
+    `${base}/functions/v1/contingency-analysis` +
+    `?tempC=${encodeURIComponent(temp)}` +
+    `&windMS=${encodeURIComponent(windMS)}` +
+    `&windDeg=${encodeURIComponent(windDeg)}` +
+    `&scenario=${encodeURIComponent(scenario)}&debug=1`;
+
+  console.log("Testing contingency-analysis via GET:", url);
+  const r = await fetch(url);
+  const j = await r.json().catch(() => ({ error: "Invalid JSON", text: await r.text() }));
+  console.log("GET test result:", r.status, j);
+  return j;
+}
 
 function ieee738Ampacity(
   conductor: string,
