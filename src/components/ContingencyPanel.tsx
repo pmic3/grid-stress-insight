@@ -25,6 +25,23 @@ interface ContingencyPanelProps {
   onContingencySelect: (outage: string, issues: ContingencyIssue[]) => void;
 }
 
+// TEMPORARY DEBUG HELPER
+async function testWithGET(temp: number, windMS: number, windDeg: number, scenario: string) {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const url =
+    `${base}/functions/v1/contingency-analysis` +
+    `?tempC=${encodeURIComponent(temp)}` +
+    `&windMS=${encodeURIComponent(windMS)}` +
+    `&windDeg=${encodeURIComponent(windDeg)}` +
+    `&scenario=${encodeURIComponent(scenario)}&debug=1`;
+
+  console.log("Testing contingency-analysis via GET:", url);
+  const r = await fetch(url);
+  const j = await r.json().catch(() => ({ error: "Invalid JSON", text: await r.text() }));
+  console.log("GET test result:", r.status, j);
+  return j;
+}
+
 export default function ContingencyPanel({
   temperature,
   windSpeed,
@@ -51,6 +68,10 @@ export default function ContingencyPanel({
   const runAnalysis = async () => {
     setLoading(true);
     try {
+      // TEMP DEBUG — test backend directly without invoke()
+      await testWithGET(temperature, windSpeed, windDirection, scenario);
+      // You can comment this out once you verify it prints valid JSON
+
       const { data, error } = await supabase.functions.invoke("contingency-analysis", {
         body: {
           tempC: Number(temperature),
@@ -58,7 +79,7 @@ export default function ContingencyPanel({
           windDeg: Number(windDirection),
           scenario: String(scenario || "nominal"),
         },
-        headers: { "Content-Type": "application/json" }, // ✅ important
+        headers: { "Content-Type": "application/json" }, // ✅ critical
       });
 
       if (error) {
