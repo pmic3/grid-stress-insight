@@ -13,33 +13,120 @@ interface ComputeRatingsRequest {
 }
 
 interface ConductorParams {
-  diameter: number; // mm
-  resistance: number; // ohms/km at 25C
+  res25C: number;
+  res50C: number;
+  diameter: number;
+  alpha: number;
   emissivity: number;
   absorptivity: number;
 }
 
-// Simplified conductor library
-const conductorLibrary: Record<string, ConductorParams> = {
-  "ACSR 795": {
+interface ConductorLibData {
+  name: string;
+  res25C: number;
+  res50C: number;
+  diameter: number;
+}
+
+interface LineData {
+  id: string;
+  bus0: string;
+  bus1: string;
+  conductor: string;
+  s_nom: number;
+  mot: number;
+  nominalMW: number;
+  geometry: any;
+  azimuth: number;
+  kV: number;
+}
+
+const conductorLibraryCache: Map<string, ConductorLibData> = new Map();
+const busVoltageCache: Map<string, number> = new Map();
+
+async function loadConductorLibrary(): Promise<Map<string, ConductorLibData>> {
+  if (conductorLibraryCache.size > 0) return conductorLibraryCache;
+  
+  try {
+    const csvPath = new URL('../_shared/data/conductor_library.csv', import.meta.url);
+    const csvText = await Deno.readTextFile(csvPath);
+    const lines = csvText.trim().split('\n');
+    
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length >= 4) {
+        const name = parts[0].trim();
+        const res25C = parseFloat(parts[1]);
+        const res50C = parseFloat(parts[2]);
+        const diameter = parseFloat(parts[3]) * 25.4; // inches to mm
+        
+        conductorLibraryCache.set(name, { name, res25C, res50C, diameter });
+      }
+    }
+    
+    console.log(`Loaded ${conductorLibraryCache.size} conductors from library`);
+    return conductorLibraryCache;
+  } catch (error) {
+    console.error('Error loading conductor library:', error);
+    return conductorLibraryCache;
+  }
+}
+
+async function loadBusVoltages(): Promise<Map<string, number>> {
+  if (busVoltageCache.size > 0) return busVoltageCache;
+  
+  try {
+    const csvPath = new URL('../_shared/data/buses.csv', import.meta.url);
+    const csvText = await Deno.readTextFile(csvPath);
+    const lines = csvText.trim().split('\n');
+    
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length >= 16) {
+        const busName = parts[15].trim(); // BusName column
+        const vNom = parseFloat(parts[1]); // v_nom column
+        
+        if (busName && !isNaN(vNom)) {
+          busVoltageCache.set(busName, vNom);
+        }
+      }
+    }
+    
+    console.log(`Loaded ${busVoltageCache.size} bus voltages`);
+    const voltages = Array.from(busVoltageCache.values());
+    console.log(`Bus voltage range: ${Math.min(...voltages)} - ${Math.max(...voltages)} kV`);
+    return busVoltageCache;
+  } catch (error) {
+    console.error('Error loading bus voltages:', error);
+    return busVoltageCache;
+  }
+}
+
+function getConductorParams(conductorName: string, library: Map<string, ConductorLibData>): ConductorParams {
+  const libData = library.get(conductorName);
+  
+  if (libData) {
+    const alpha = (libData.res50C - libData.res25C) / (libData.res25C * 25);
+    return {
+      res25C: libData.res25C,
+      res50C: libData.res50C,
+      diameter: libData.diameter,
+      alpha: alpha > 0 ? alpha : 0.0039,
+      emissivity: 0.8,
+      absorptivity: 0.8,
+    };
+  }
+  
+  console.warn(`Conductor ${conductorName} not found in library, using default`);
+  return {
+    res25C: 0.1166,
+    res50C: 0.1278,
     diameter: 28.1,
-    resistance: 0.0733,
-    emissivity: 0.5,
-    absorptivity: 0.5,
-  },
-  "ACSR 1033": {
-    diameter: 31.8,
-    resistance: 0.0563,
-    emissivity: 0.5,
-    absorptivity: 0.5,
-  },
-  "ACSR 477": {
-    diameter: 21.8,
-    resistance: 0.1206,
-    emissivity: 0.5,
-    absorptivity: 0.5,
-  },
-};
+    alpha: 0.0039,
+    emissivity: 0.8,
+    absorptivity: 0.8,
+  };
+}
 
 function normalizeKV(raw: any): number {
   const v = parseFloat(raw);
@@ -82,38 +169,46 @@ function computeAttackAngle(windDeg: number, lineAzimuthDeg: number): number {
   return Math.min(delta, 90);
 }
 
-function resistanceAtTemp(R25: number, alpha: number, Tc_C: number): number {
-  return R25 * (1 + alpha * (Tc_C - 25));
+function resistanceAtTemp(res25C: number, alpha: number, tempC: number): number {
+  return res25C * (1 + alpha * (tempC - 25));
 }
 
 function ieee738Ampacity(
-  tempC: number,
+  ambientTempC: number,
   windMS: number,
-  attackDeg: number,
+  attackAngleDeg: number,
   motC: number,
-  conductor: ConductorParams,
+  conductor: ConductorParams
 ): number {
-  const airDensity = 1.225; // kg/m³
-  const windAngleFactor = Math.sin((Math.max(0, Math.min(90, attackDeg)) * Math.PI) / 180);
-  const effectiveWind = Math.max(0.2, windMS * Math.max(0.2, windAngleFactor));
-
-  const diameterM = conductor.diameter / 1000;
-  // Convection (very simplified scaling; OK for hackathon)
-  const convectionCooling =
-    0.0119 * airDensity ** 0.6 * effectiveWind ** 0.6 * diameterM ** 0.4 * Math.max(0, motC - tempC);
-
-  // Radiation
+  const Tmax = motC;
+  const Ta = ambientTempC;
+  const V = Math.max(windMS, 0.5);
+  const phi = (attackAngleDeg * Math.PI) / 180;
+  
+  const D = conductor.diameter / 1000; // mm to m
+  const eps = conductor.emissivity;
+  const alpha_solar = conductor.absorptivity;
+  const R = conductor.res25C / 1000; // ohm/km to ohm/m
+  const alpha_R = conductor.alpha;
+  
   const sigma = 5.67e-8;
-  const Tk = motC + 273.15;
-  const Ta = tempC + 273.15;
-  const radiationCooling = sigma * conductor.emissivity * Math.PI * diameterM * (Tk ** 4 - Ta ** 4);
-
-  const totalCoolingPerMeter = convectionCooling + radiationCooling;
-  const totalCoolingPerKm = totalCoolingPerMeter * 1000;
-
-  const Rkm = resistanceAtTemp(conductor.resistance, 0.0039, motC); // α≈0.0039
-  const I2 = totalCoolingPerKm / Math.max(Rkm, 1e-9);
-  return Math.sqrt(Math.max(I2, 0));
+  const nu = 1.5e-5;
+  const k = 0.026;
+  
+  const Re = (V * D) / nu;
+  const Nu = 0.24 * Math.pow(Re, 0.6);
+  const h_conv = (Nu * k) / D;
+  
+  const Q_conv = h_conv * Math.PI * D * (Tmax - Ta) * Math.abs(Math.sin(phi));
+  const Q_rad = eps * sigma * Math.PI * D * (Math.pow(Tmax + 273.15, 4) - Math.pow(Ta + 273.15, 4));
+  const Q_solar = alpha_solar * 1000 * D * 0.5;
+  
+  const Q_net = Q_conv + Q_rad - Q_solar;
+  
+  const R_actual = resistanceAtTemp(R, alpha_R, Tmax);
+  const I = Math.sqrt(Math.max(0, Q_net / R_actual));
+  
+  return I;
 }
 
 function computeLineStress(actualA: number, ratingA: number): number {
@@ -170,81 +265,87 @@ function computeSystemStressIndex(stresses: number[]): any {
   };
 }
 
-// In-memory cache for grid data
-let cachedGridData: any = null;
+let cachedGridData: Map<string, LineData> | null = null;
 
-async function loadGridData() {
+async function loadGridData(): Promise<Map<string, LineData>> {
   if (cachedGridData) return cachedGridData;
-
-  const GITHUB_BASE = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/";
-
-  const [linesRes, flowsRes, geojsonRes] = await Promise.all([
-    fetch(`${GITHUB_BASE}csv/lines.csv`),
-    fetch(`${GITHUB_BASE}line_flows_nominal.csv`),
-    fetch(`${GITHUB_BASE}gis/oneline_lines.geojson`),
+  
+  const [conductorLib, busVoltages] = await Promise.all([
+    loadConductorLibrary(),
+    loadBusVoltages()
   ]);
-
-  if (!linesRes.ok || !flowsRes.ok || !geojsonRes.ok) {
-    throw new Error("Failed to fetch grid data files");
+  
+  const gridData: Map<string, LineData> = new Map();
+  
+  try {
+    const linesCsvPath = new URL('../_shared/data/lines.csv', import.meta.url);
+    const linesCsv = await Deno.readTextFile(linesCsvPath);
+    const linesRows = linesCsv.trim().split('\n');
+    
+    const lineMap: Map<string, any> = new Map();
+    for (let i = 1; i < linesRows.length; i++) {
+      const parts = linesRows[i].split(',');
+      if (parts.length >= 13) {
+        lineMap.set(parts[0], {
+          bus0: parts[1],
+          bus1: parts[2],
+          conductor: parts[11],
+          s_nom: parseFloat(parts[10]),
+          mot: parseFloat(parts[12]),
+        });
+      }
+    }
+    
+    const flowsCsvPath = new URL('../_shared/data/line_flows_nominal.csv', import.meta.url);
+    const flowsCsv = await Deno.readTextFile(flowsCsvPath);
+    const flowsRows = flowsCsv.trim().split('\n');
+    
+    const flowMap: Map<string, number> = new Map();
+    for (let i = 1; i < flowsRows.length; i++) {
+      const parts = flowsRows[i].split(',');
+      if (parts.length >= 2) {
+        flowMap.set(parts[0], parseFloat(parts[1]));
+      }
+    }
+    
+    const geojsonPath = new URL('../_shared/data/oneline_lines.geojson', import.meta.url);
+    const geojsonText = await Deno.readTextFile(geojsonPath);
+    const geojson = JSON.parse(geojsonText);
+    
+    for (const feature of geojson.features) {
+      const id = feature.properties.Name;
+      const lineData = lineMap.get(id);
+      
+      if (lineData) {
+        const bus0Voltage = busVoltages.get(lineData.bus0) || 69;
+        const bus1Voltage = busVoltages.get(lineData.bus1) || 69;
+        const kV = Math.max(bus0Voltage, bus1Voltage);
+        
+        const coords = getLineCoords(feature.geometry);
+        const azimuth = coords ? computeAzimuthFromCoords(coords) : 0;
+        
+        gridData.set(id, {
+          id,
+          bus0: lineData.bus0,
+          bus1: lineData.bus1,
+          conductor: lineData.conductor,
+          s_nom: lineData.s_nom,
+          mot: lineData.mot,
+          nominalMW: flowMap.get(id) || 0,
+          geometry: feature.geometry,
+          azimuth,
+          kV,
+        });
+      }
+    }
+    
+    console.log(`Loaded ${gridData.size} lines with bus voltages`);
+    cachedGridData = gridData;
+    return gridData;
+  } catch (error) {
+    console.error('Error loading grid data:', error);
+    throw error;
   }
-
-  const [linesCsv, flowsCsv, geojsonText] = await Promise.all([linesRes.text(), flowsRes.text(), geojsonRes.text()]);
-
-  const parseCSV = (csv: string) => {
-    const lines = csv.trim().split("\n");
-    const headers = lines[0].split(",");
-    return lines.slice(1).map((line) => {
-      const values = line.split(",");
-      const obj: any = {};
-      headers.forEach((header, i) => {
-        obj[header] = values[i];
-      });
-      return obj;
-    });
-  };
-
-  const linesData = parseCSV(linesCsv);
-  const flowsData = parseCSV(flowsCsv);
-  const geojson = JSON.parse(geojsonText);
-
-  const flowsMap: Record<string, any> = {};
-  flowsData.forEach((flow) => {
-    flowsMap[flow.name] = parseFloat(flow.p0_nominal);
-  });
-
-  const linesDict: Record<string, any> = {};
-  geojson.features.forEach((feature: any) => {
-    const lineId = feature?.properties?.Name || feature?.properties?.id;
-    if (!lineId) return;
-
-    const lineData = linesData.find((l: any) => l.name === lineId);
-    if (!lineData || !feature.geometry) return;
-
-    const coords = getLineCoords(feature.geometry);
-    const azimuth = coords ? computeAzimuthFromCoords(coords) : 0;
-
-    const kV = feature.properties.kV ? normalizeKV(feature.properties.kV) : normalizeKV(feature.properties.nomkv);
-
-    linesDict[lineId] = {
-      id: lineId,
-      name: lineData.branch_name || lineId,
-      azimuth,
-      kV,
-      conductor: lineData.conductor,
-      mot: parseFloat(lineData.MOT) || 100,
-      s_nom: parseFloat(lineData.s_nom),
-      p0_nominal: parseFloat(flowsMap[lineId]) || 0, // MW (pf≈1)
-    };
-  });
-
-  cachedGridData = linesDict;
-  console.log(`Loaded ${Object.keys(linesDict).length} lines`);
-  const sample = Object.values(linesDict).slice(0, 3);
-  console.log(
-    "Sample:",
-    sample.map((l) => ({ id: l.id, kV: l.kV, MW: l.p0_nominal, conductor: l.conductor })),
-  );
-  return cachedGridData;
 }
 
 serve(async (req) => {
@@ -254,65 +355,71 @@ serve(async (req) => {
 
   try {
     const { tempC, windMS, windDeg, scenario }: ComputeRatingsRequest = await req.json();
-
-    console.log("Computing ratings:", { tempC, windMS, windDeg, scenario });
-
-    const linesDict = await loadGridData();
-    const lineIds = Object.keys(linesDict);
-
-    console.log(`Processing ${lineIds.length} lines`);
-
-    const scenarioMultiplier = { min: 0.85, nominal: 1.0, max: 1.15 };
-
-    const results = lineIds.map((lineId) => {
-      const line = linesDict[lineId];
-      const conductor = conductorLibrary[line.conductor] || conductorLibrary["ACSR 795"];
-      const attackAngle = computeAttackAngle(windDeg, line.azimuth);
-
-      // Convert MW → Amps (approx. assuming pf ≈ 1)
-      const actualMW = Math.abs(line.p0_nominal) * scenarioMultiplier[scenario];
-      const actualA = (actualMW * 1000) / (Math.sqrt(3) * line.kV);
-
-      const ratingA = ieee738Ampacity(tempC, windMS, attackAngle, line.mot, conductor);
-      const stressPct = computeLineStress(actualA, ratingA);
-      const overloadTemp = solveOverloadTemp({ ...line, attackAngle }, windMS, windDeg, actualA, conductor);
-
-      return {
+    
+    const gridData = await loadGridData();
+    const conductorLib = await loadConductorLibrary();
+    
+    const scenarioMultiplier = scenario === 'min' ? 0.85 : scenario === 'max' ? 1.15 : 1.0;
+    
+    const lineResults: any[] = [];
+    const stresses: number[] = [];
+    
+    for (const [lineId, lineData] of gridData.entries()) {
+      const actualMW = lineData.nominalMW * scenarioMultiplier;
+      const actualA = (actualMW * 1000) / (Math.sqrt(3) * lineData.kV);
+      
+      const conductor = getConductorParams(lineData.conductor, conductorLib);
+      const attackAngle = computeAttackAngle(windDeg, lineData.azimuth);
+      const dynamicA = ieee738Ampacity(tempC, windMS, attackAngle, lineData.mot, conductor);
+      
+      const nameplateA = (lineData.s_nom * 1000) / (Math.sqrt(3) * lineData.kV);
+      const deltaPct = ((dynamicA - nameplateA) / nameplateA) * 100;
+      
+      const stress = computeLineStress(actualA, dynamicA);
+      stresses.push(stress);
+      
+      lineResults.push({
         id: lineId,
-        name: line.name,
-        ratingA,
-        actualA,
-        stressPct,
-        overloadTemp,
-      };
-    });
-
-    const stresses = results.map((r) => r.stressPct);
+        kV: lineData.kV.toFixed(1),
+        conductor: lineData.conductor,
+        actualA: actualA.toFixed(1),
+        dynamicRatingA: dynamicA.toFixed(1),
+        nameplateA: nameplateA.toFixed(1),
+        deltaPct: deltaPct.toFixed(1),
+        stressPct: stress.toFixed(1),
+        mot: lineData.mot,
+      });
+    }
+    
     const systemStats = computeSystemStressIndex(stresses);
-
-    // Debug: log a few sample lines to verify units
-    try {
-      const sample = results
-        .slice(0, 3)
-        .map((r) => ({ id: r.id, ratingA: r.ratingA, actualA: r.actualA, stressPct: r.stressPct }));
-      console.log("Sample ratings:", JSON.stringify(sample));
-    } catch (_) {}
-
-    const response = {
-      lines: results,
-      system: systemStats,
-      conditions: { tempC, windMS, windDeg, scenario },
-    };
-
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    
+    const sortedLines = lineResults
+      .map((l, i) => ({ ...l, stress: stresses[i] }))
+      .sort((a, b) => b.stress - a.stress)
+      .slice(0, 5);
+    
+    return new Response(JSON.stringify({
+      lines: lineResults,
+      system: {
+        ssi: systemStats.ssi.toFixed(1),
+        bands: systemStats.bands,
+        avgStress: systemStats.avgStress.toFixed(1),
+        maxStress: systemStats.maxStress.toFixed(1),
+        topLinesAtRisk: sortedLines.map(l => ({
+          id: l.id,
+          stressPct: l.stressPct,
+          overloadTemp: 'N/A',
+        })),
+      },
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error("Error computing ratings:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error('Error in compute-ratings:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
