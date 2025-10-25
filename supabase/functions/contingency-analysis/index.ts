@@ -1,41 +1,32 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { parse } from "https://deno.land/std@0.224.0/csv/parse.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function jsonResponse(body: unknown, status = 200) {
+function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 
-async function readJsonOrDefault(req: Request) {
-  try {
-    if (req.method === "GET") {
-      const url = new URL(req.url);
-      return {
-        tempC: parseFloat(url.searchParams.get("tempC") ?? "25"),
-        windMS: parseFloat(url.searchParams.get("windMS") ?? "5"),
-        windDeg: parseFloat(url.searchParams.get("windDeg") ?? "90"),
-        scenario: url.searchParams.get("scenario") ?? "nominal",
-      };
-    }
-    const obj = await req.json().catch(() => ({}));
-    return {
-      tempC: Number.isFinite(obj?.tempC) ? obj.tempC : 25,
-      windMS: Number.isFinite(obj?.windMS) ? obj.windMS : 5,
-      windDeg: Number.isFinite(obj?.windDeg) ? obj.windDeg : 90,
-      scenario: typeof obj?.scenario === "string" ? obj.scenario : "nominal",
-    };
-  } catch {
-    return { tempC: 25, windMS: 5, windDeg: 90, scenario: "nominal" };
-  }
-}
+type LineRow = {
+  name: string;
+  bus0: string;
+  bus1: string;
+  branch_name: string;
+  conductor: string;
+  MOT: string;
+};
 
-// ---------- CSV loading (header-based, robust)
+type FlowRow = {
+  name: string;
+  p0_nominal: string;
+};
+
 type LineData = {
   id: string;
   name: string;
@@ -47,91 +38,7 @@ type LineData = {
   MOT: number;
 };
 
-async function loadGridData(): Promise<Map<string, LineData>> {
-  const GITHUB = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/";
-  const [linesRes, flowsRes] = await Promise.all([
-    fetch(`${GITHUB}csv/lines.csv`),
-    fetch(`${GITHUB}line_flows_nominal.csv`),
-  ]);
-  if (!linesRes.ok || !flowsRes.ok) {
-    throw new Error(`CSV fetch failed: lines=${linesRes.status} flows=${flowsRes.status}`);
-  }
-  const [linesText, flowsText] = await Promise.all([linesRes.text(), flowsRes.text()]);
-
-  const toRows = (t: string) =>
-    t
-      .trim()
-      .split("\n")
-      .map((r) => r.split(","));
-  const L = toRows(linesText);
-  const F = toRows(flowsText);
-  const Lh = L[0].map((h) => h.trim().toLowerCase());
-  const Fh = F[0].map((h) => h.trim().toLowerCase());
-
-  const idx = (hdr: string[], name: string) => {
-    const i = hdr.indexOf(name.toLowerCase());
-    if (i < 0) throw new Error(`Missing column "${name}"`);
-    return i;
-  };
-
-  const Li = {
-    name: idx(Lh, "name"),
-    bus0: idx(Lh, "bus0"),
-    bus1: idx(Lh, "bus1"),
-    branch_name: idx(Lh, "branch_name"),
-    conductor: idx(Lh, "conductor"),
-    mot: idx(Lh, "mot"),
-  };
-  const Fi = {
-    name: idx(Fh, "name"),
-    p0_nominal: idx(Fh, "p0_nominal"),
-  };
-
-  const flowMap = new Map<string, number>();
-  for (let r = 1; r < F.length; r++) {
-    const row = F[r];
-    const nm = (row[Fi.name] ?? "").trim();
-    const p0 = parseFloat(row[Fi.p0_nominal] ?? "0");
-    if (nm) flowMap.set(nm, Number.isFinite(p0) ? p0 : 0);
-  }
-
-  const grid = new Map<string, LineData>();
-  for (let r = 1; r < L.length; r++) {
-    const row = L[r];
-    const id = (row[Li.name] ?? "").trim(); // "name" used as unique id
-    if (!id) continue;
-
-    const name = (row[Li.branch_name] ?? id).trim();
-    const bus0 = parseInt(row[Li.bus0] ?? "", 10);
-    const bus1 = parseInt(row[Li.bus1] ?? "", 10);
-    const conductor = (row[Li.conductor] ?? "").trim();
-    const MOT = parseFloat(row[Li.mot] ?? "100");
-
-    // Quick kV heuristic from line name (e.g., "...69...", "...138...")
-    let kV = 115;
-    if (/\b69\b/.test(name)) kV = 69;
-    else if (/\b138\b/.test(name)) kV = 138;
-
-    grid.set(id, {
-      id,
-      name,
-      bus0: Number.isFinite(bus0) ? bus0 : -1,
-      bus1: Number.isFinite(bus1) ? bus1 : -1,
-      conductor,
-      p0_nominal: flowMap.get(id) ?? 0, // MW (pf≈1)
-      kV,
-      MOT: Number.isFinite(MOT) ? MOT : 100,
-    });
-  }
-
-  // Diagnostics
-  const any = grid.values().next().value;
-  console.log("Grid size:", grid.size, "Sample:", any?.id, any?.name, any?.kV, any?.p0_nominal);
-  return grid;
-}
-
-// ---------- Simplified ampacity + stress
-const conductorLibrary: Record<string, any> = {
+const conductorLibrary: Record<string, { diam_mm: number; r25_ohm_km: number; alpha?: number }> = {
   "795 ACSR 26/7 DRAKE": { diam_mm: 28.14, r25_ohm_km: 0.0724, alpha: 0.00404 },
   "556.5 ACSR 26/7 DOVE": { diam_mm: 23.01, r25_ohm_km: 0.1039, alpha: 0.00404 },
   "1272 ACSR 45/7 BITTERN": { diam_mm: 35.1, r25_ohm_km: 0.04559, alpha: 0.00404 },
@@ -147,11 +54,10 @@ function ieee738Ampacity(
   MOT: number,
 ): number {
   const p = conductorLibrary[conductor];
-  if (!p) return 600; // safe default
-
+  if (!p) return 600; // safe default for unknowns
   const D = p.diam_mm / 1000;
   const k_air = 0.026; // W/mK
-  const Nu = 5; // rough constant for hackathon
+  const Nu = 5; // simple constant Nusselt for hackathon
   const h_conv = (Nu * k_air) / D;
 
   const attack = Math.abs(((azimuthDeg - windDeg + 540) % 360) - 180);
@@ -173,19 +79,106 @@ function computeLineStress(actualA: number, ratingA: number): number {
   return ratingA > 0 ? (actualA / ratingA) * 100 : 0;
 }
 
-// ---------- Handler
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+async function loadGridData(debug = false) {
+  const GITHUB = "https://raw.githubusercontent.com/cwebber314/osu_hackathon/main/hawaii40_osu/";
+  const [linesRes, flowsRes] = await Promise.all([
+    fetch(`${GITHUB}csv/lines.csv`),
+    fetch(`${GITHUB}line_flows_nominal.csv`),
+  ]);
+  if (!linesRes.ok || !flowsRes.ok) {
+    throw new Error(`CSV fetch failed: lines=${linesRes.status} flows=${flowsRes.status}`);
   }
 
+  const [linesText, flowsText] = await Promise.all([linesRes.text(), flowsRes.text()]);
+
+  // Robust CSV parse (handles quotes/commas)
+  const linesRows = (await parse(linesText, { skipFirstRow: false, columns: true })) as LineRow[];
+  const flowsRows = (await parse(flowsText, { skipFirstRow: false, columns: true })) as FlowRow[];
+
+  // Validate headers exist (defensive)
+  const needL = ["name", "bus0", "bus1", "branch_name", "conductor", "MOT"];
+  const needF = ["name", "p0_nominal"];
+  const linesHeaders = Object.keys(linesRows[0] ?? {});
+  const flowsHeaders = Object.keys(flowsRows[0] ?? {});
+  for (const h of needL)
+    if (!linesHeaders.includes(h)) throw new Error(`lines.csv missing column "${h}" (have: ${linesHeaders.join(",")})`);
+  for (const h of needF)
+    if (!flowsHeaders.includes(h))
+      throw new Error(`line_flows_nominal.csv missing column "${h}" (have: ${flowsHeaders.join(",")})`);
+
+  // Build flow map by line "name"
+  const flowMap = new Map<string, number>();
+  for (const fr of flowsRows) {
+    const nm = (fr.name ?? "").trim();
+    const p0 = parseFloat(fr.p0_nominal ?? "0");
+    if (nm) flowMap.set(nm, Number.isFinite(p0) ? p0 : 0);
+  }
+
+  // Build grid
+  const grid = new Map<string, LineData>();
+  for (const lr of linesRows) {
+    const id = (lr.name ?? "").trim(); // unique id used in flows too
+    if (!id) continue;
+
+    const name = (lr.branch_name ?? id).trim();
+    const bus0 = parseInt(lr.bus0 ?? "", 10);
+    const bus1 = parseInt(lr.bus1 ?? "", 10);
+    const conductor = (lr.conductor ?? "").trim();
+    const MOT = parseFloat(lr.MOT ?? "100");
+
+    // Heuristic kV from name text (quick & works for this dataset)
+    let kV = 115;
+    if (/\b69\b/.test(name)) kV = 69;
+    else if (/\b138\b/.test(name)) kV = 138;
+
+    grid.set(id, {
+      id,
+      name,
+      bus0: Number.isFinite(bus0) ? bus0 : -1,
+      bus1: Number.isFinite(bus1) ? bus1 : -1,
+      conductor,
+      p0_nominal: flowMap.get(id) ?? 0, // MW (pf≈1)
+      kV,
+      MOT: Number.isFinite(MOT) ? MOT : 100,
+    });
+  }
+
+  if (debug) {
+    console.log("lines headers:", linesHeaders);
+    console.log("flows headers:", flowsHeaders);
+    const any = grid.values().next().value;
+    console.log("Grid size:", grid.size, "Sample:", any);
+  }
+
+  return grid;
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const url = new URL(req.url);
+  const debug = url.searchParams.get("debug") === "1";
+
   try {
-    const { tempC, windMS, windDeg } = await readJsonOrDefault(req);
+    // Read params (GET for quick tests or POST from app)
+    let tempC = 25,
+      windMS = 5,
+      windDeg = 90;
+    if (req.method === "GET") {
+      tempC = parseFloat(url.searchParams.get("tempC") ?? "25");
+      windMS = parseFloat(url.searchParams.get("windMS") ?? "5");
+      windDeg = parseFloat(url.searchParams.get("windDeg") ?? "90");
+    } else {
+      const body = await req.json().catch(() => ({}));
+      tempC = Number.isFinite(body?.tempC) ? body.tempC : 25;
+      windMS = Number.isFinite(body?.windMS) ? body.windMS : 5;
+      windDeg = Number.isFinite(body?.windDeg) ? body.windDeg : 90;
+    }
 
-    const grid = await loadGridData();
-    if (!grid.size) return jsonResponse({ error: "No grid data loaded" }, 400);
+    const grid = await loadGridData(debug);
+    if (!grid.size) return json({ error: "No grid data loaded" }, 500);
 
-    // Build adjacency map bus -> [line ids]
+    // Build adjacency: bus -> [line ids]
     const busToLines = new Map<number, string[]>();
     for (const L of grid.values()) {
       if (!busToLines.has(L.bus0)) busToLines.set(L.bus0, []);
@@ -194,20 +187,16 @@ serve(async (req) => {
       busToLines.get(L.bus1)!.push(L.id);
     }
 
-    const contingencies: {
-      outage: string;
-      issues: { line: string; stress: number }[];
-      maxStress: number;
-    }[] = [];
+    // Run N-1 (heuristic redistribution to neighbors)
+    const contingencies: { outage: string; issues: { line: string; stress: number }[]; maxStress: number }[] = [];
 
-    // For each line, simulate outage (heuristic redistribution to neighbors)
     for (const outage of grid.values()) {
       const neighbors = new Set<string>();
       (busToLines.get(outage.bus0) ?? []).forEach((id) => id !== outage.id && neighbors.add(id));
       (busToLines.get(outage.bus1) ?? []).forEach((id) => id !== outage.id && neighbors.add(id));
       if (!neighbors.size) continue;
 
-      const stressIncreaseFactor = 0.3; // heuristic “extra burden” on neighbors
+      const stressIncreaseFactor = 0.3;
       const issues: { line: string; stress: number }[] = [];
       let maxStress = 0;
 
@@ -236,9 +225,13 @@ serve(async (req) => {
     }
 
     contingencies.sort((a, b) => b.maxStress - a.maxStress);
-    return jsonResponse({ contingencies: contingencies.slice(0, 10) });
-  } catch (err) {
+    return json({ contingencies: contingencies.slice(0, 10) });
+  } catch (err: any) {
+    // Return useful debug info instead of a blank 500
+    if (debug) {
+      return json({ error: String(err?.message ?? err), stack: err?.stack ?? null }, 500);
+    }
     console.error("Contingency analysis error:", err);
-    return jsonResponse({ error: String((err as any)?.message ?? err) }, 500);
+    return json({ error: "Internal error running contingency analysis" }, 500);
   }
 });
