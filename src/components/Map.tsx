@@ -168,6 +168,9 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
         data: regions
       });
 
+      // Add layers before transmission-lines so they appear underneath
+      const beforeLayer = map.current.getLayer('transmission-lines') ? 'transmission-lines' : undefined;
+
       map.current.addLayer({
         id: 'region-fills',
         type: 'fill',
@@ -176,7 +179,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
           'fill-color': ['get', 'color'],
           'fill-opacity': showRegions ? 1 : 0
         }
-      });
+      }, beforeLayer);
 
       map.current.addLayer({
         id: 'region-borders',
@@ -188,7 +191,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
           'line-opacity': showRegions ? 0.3 : 0,
           'line-dasharray': [3, 2]
         }
-      });
+      }, beforeLayer);
 
       // Add region labels
       regions.features.forEach((feature, index) => {
