@@ -141,47 +141,94 @@ const Map = ({
       data: regionsGeoJSON,
     });
 
+    // Decide placement: ensure lines appear above region fills
+    const beforeId = map.current.getLayer('transmission-lines') ? 'transmission-lines' : undefined;
+
     // Add region fill layer
-    map.current.addLayer({
-      id: 'region-fills',
-      type: 'fill',
-      source: 'regions',
-      paint: {
-        'fill-color': [
-          'case',
-          ['get', 'isCut'], 'hsl(220, 15%, 35%)',
-          ['get', 'isSelected'], 'hsl(199, 89%, 48%)',
-          'hsl(199, 89%, 48%)'
-        ],
-        'fill-opacity': [
-          'case',
-          ['get', 'isCut'], 0.1,
-          ['get', 'isSelected'], 0.2,
-          showRegions ? 0.08 : 0
-        ],
-      },
-    }, 'transmission-lines');
+    if (beforeId) {
+      map.current.addLayer({
+        id: 'region-fills',
+        type: 'fill',
+        source: 'regions',
+        paint: {
+          'fill-color': [
+            'case',
+            ['get', 'isCut'], 'hsl(220, 15%, 35%)',
+            ['get', 'isSelected'], 'hsl(199, 89%, 48%)',
+            'hsl(199, 89%, 48%)'
+          ],
+          'fill-opacity': [
+            'case',
+            ['get', 'isCut'], 0.1,
+            ['get', 'isSelected'], 0.2,
+            showRegions ? 0.08 : 0
+          ],
+        },
+      }, beforeId);
+    } else {
+      map.current.addLayer({
+        id: 'region-fills',
+        type: 'fill',
+        source: 'regions',
+        paint: {
+          'fill-color': [
+            'case',
+            ['get', 'isCut'], 'hsl(220, 15%, 35%)',
+            ['get', 'isSelected'], 'hsl(199, 89%, 48%)',
+            'hsl(199, 89%, 48%)'
+          ],
+          'fill-opacity': [
+            'case',
+            ['get', 'isCut'], 0.1,
+            ['get', 'isSelected'], 0.2,
+            showRegions ? 0.08 : 0
+          ],
+        },
+      });
+    }
 
     // Add region border layer
-    map.current.addLayer({
-      id: 'region-borders',
-      type: 'line',
-      source: 'regions',
-      paint: {
-        'line-color': [
-          'case',
-          ['get', 'isCut'], 'hsl(220, 15%, 45%)',
-          ['get', 'isSelected'], 'hsl(199, 89%, 58%)',
-          'hsl(199, 89%, 48%)'
-        ],
-        'line-width': [
-          'case',
-          ['get', 'isSelected'], 2,
-          1
-        ],
-        'line-opacity': showRegions ? 0.4 : 0,
-      },
-    }, 'transmission-lines');
+    if (beforeId) {
+      map.current.addLayer({
+        id: 'region-borders',
+        type: 'line',
+        source: 'regions',
+        paint: {
+          'line-color': [
+            'case',
+            ['get', 'isCut'], 'hsl(220, 15%, 45%)',
+            ['get', 'isSelected'], 'hsl(199, 89%, 58%)',
+            'hsl(199, 89%, 48%)'
+          ],
+          'line-width': [
+            'case',
+            ['get', 'isSelected'], 2,
+            1
+          ],
+          'line-opacity': showRegions ? 0.4 : 0,
+        },
+      }, beforeId);
+    } else {
+      map.current.addLayer({
+        id: 'region-borders',
+        type: 'line',
+        source: 'regions',
+        paint: {
+          'line-color': [
+            'case',
+            ['get', 'isCut'], 'hsl(220, 15%, 45%)',
+            ['get', 'isSelected'], 'hsl(199, 89%, 58%)',
+            'hsl(199, 89%, 48%)'
+          ],
+          'line-width': [
+            'case',
+            ['get', 'isSelected'], 2,
+            1
+          ],
+          'line-opacity': showRegions ? 0.4 : 0,
+        },
+      });
+    }
 
     // Add region click handler
     map.current.on('click', 'region-fills', (e) => {
@@ -528,36 +575,23 @@ const Map = ({
 
   // Handle satellite view toggle
   useEffect(() => {
-    if (!map.current || !map.current.isStyleLoaded()) return;
+    if (!map.current) return;
     
-    const newStyle = isSatelliteView
+    const styleUrl = isSatelliteView
       ? 'mapbox://styles/mapbox/satellite-streets-v12'
       : 'mapbox://styles/mapbox/dark-v11';
     
-    map.current.setStyle(newStyle);
+    map.current.setStyle(styleUrl);
     
-    // Re-add layers after style loads
-    const handleStyleLoad = () => {
-      console.log('Style loaded after toggle, re-adding layers');
-      // Wait for next tick to ensure style is fully loaded
-      setTimeout(() => {
-        if (map.current && map.current.isStyleLoaded()) {
-          console.log('Re-adding lines and regions');
-          if (regions.length > 0) {
-            updateRegionLayers();
-          }
-          if (lines.length > 0) {
-            updateMapLines();
-          }
-          if (buses.length > 0) {
-            updateBusMarkers();
-          }
-        }
-      }, 100);
+    const onStyleLoad = () => {
+      // Add lines first so regions can be placed beneath them
+      if (lines.length > 0) updateMapLines();
+      if (regions.length > 0) updateRegionLayers();
+      if (buses.length > 0) updateBusMarkers();
     };
     
-    map.current.once('styledata', handleStyleLoad);
-  }, [isSatelliteView, lines, buses, regions]);
+    map.current.once('style.load', onStyleLoad);
+  }, [isSatelliteView]);
 
   return (
     <div className="relative w-full h-full">
