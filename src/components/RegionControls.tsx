@@ -73,10 +73,28 @@ const RegionControls = ({
           </p>
           
           <div className="space-y-2">
-            {regions.map(region => {
-              const stats = calculateRegionStats(region.id, lines, lineRegionMap);
-              const isCut = cutRegions.has(region.id);
-              const isSelected = selectedRegion === region.id;
+            {regions
+              .map(region => ({
+                region,
+                stats: calculateRegionStats(region.id, lines, lineRegionMap),
+                isCut: cutRegions.has(region.id),
+                isSelected: selectedRegion === region.id,
+              }))
+              .sort((a, b) => {
+                // Cut regions go to bottom
+                if (a.isCut && !b.isCut) return 1;
+                if (!a.isCut && b.isCut) return -1;
+                
+                // Sort by risk: over100 count, then over95 count, then maxStress
+                if (b.stats.over100 !== a.stats.over100) {
+                  return b.stats.over100 - a.stats.over100;
+                }
+                if (b.stats.over95 !== a.stats.over95) {
+                  return b.stats.over95 - a.stats.over95;
+                }
+                return b.stats.maxStress - a.stats.maxStress;
+              })
+              .map(({ region, stats, isCut, isSelected }) => {
 
               return (
                 <div
