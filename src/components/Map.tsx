@@ -97,16 +97,26 @@ const Map = ({
   };
 
   const updateRegionLayers = () => {
-    if (!map.current || !map.current.isStyleLoaded() || regions.length === 0) return;
+    if (!map.current || !map.current.isStyleLoaded() || regions.length === 0) {
+      // Even if conditions aren't met, clear labels if showRegions is false
+      if (!showRegions && regionLabels.current.length > 0) {
+        regionLabels.current.forEach(marker => marker.remove());
+        regionLabels.current = [];
+      }
+      return;
+    }
+
+    // Always clear existing labels first
+    regionLabels.current.forEach(marker => marker.remove());
+    regionLabels.current = [];
 
     // Remove existing region layers
     if (map.current.getLayer('region-fills')) map.current.removeLayer('region-fills');
     if (map.current.getLayer('region-borders')) map.current.removeLayer('region-borders');
     if (map.current.getSource('regions')) map.current.removeSource('regions');
 
-    // Clear existing labels
-    regionLabels.current.forEach(marker => marker.remove());
-    regionLabels.current = [];
+    // If regions are hidden, don't recreate anything
+    if (!showRegions) return;
 
     // Create GeoJSON for regions
     const regionsGeoJSON: GeoJSON.FeatureCollection = {
