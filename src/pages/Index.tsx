@@ -630,7 +630,11 @@ const Index = () => {
 
             {/* Stats Panel */}
             <div className="lg:col-span-3 overflow-y-auto space-y-4">
-              <StatsPanel stats={adjustedStats} selectedLine={selectedLine} />
+              <StatsPanel 
+                stats={adjustedStats} 
+                selectedLine={selectedLine}
+                lines={adjustedLines}
+              />
               
               {mode === 'forecast' && (
                 <ForecastAlertsCard

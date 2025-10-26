@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { AlertTriangle, Activity, Zap, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, Activity, Zap, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SystemStats {
   systemStressIndex: number;
@@ -31,9 +34,18 @@ interface StatsPanelProps {
     conductor: string;
     mot: number;
   } | null;
+  lines?: Array<{
+    id: string;
+    name: string;
+    stress: number;
+    overloadTemp?: number;
+    isCut?: boolean;
+  }>;
 }
 
-const StatsPanel = ({ stats, selectedLine }: StatsPanelProps) => {
+const StatsPanel = ({ stats, selectedLine, lines = [] }: StatsPanelProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const getStressColor = (stress: number) => {
     if (stress < 70) return 'text-success';
     if (stress < 90) return 'text-warning';
@@ -116,25 +128,76 @@ const StatsPanel = ({ stats, selectedLine }: StatsPanelProps) => {
 
       {/* First to Fail */}
       <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-        <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-warning" />
-          First to Fail
-        </h3>
-        <div className="space-y-3">
-          {stats.firstToFail.slice(0, 5).map((line, idx) => (
-            <div key={idx} className="p-3 bg-muted/30 rounded-lg border border-border/50">
-              <div className="flex justify-between items-start mb-1">
-                <span className="text-sm font-medium text-foreground">{line.name}</span>
-                <span className={`text-sm font-bold ${getStressColor(line.stress)}`}>
-                  {line.stress.toFixed(1)}%
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Overload at {line.overloadTemp.toFixed(1)}°C
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-warning" />
+            First to Fail
+          </h3>
+          {lines.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="h-8 px-2"
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-1" />
+                  <span className="text-xs">Collapse</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-1" />
+                  <span className="text-xs">Show All</span>
+                </>
+              )}
+            </Button>
+          )}
         </div>
+        
+        {isExpanded ? (
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-3">
+              {lines
+                .filter(line => !line.isCut)
+                .sort((a, b) => b.stress - a.stress)
+                .map((line, idx) => (
+                  <div key={line.id} className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-muted-foreground">#{idx + 1}</span>
+                        <span className="text-sm font-medium text-foreground">{line.name}</span>
+                      </div>
+                      <span className={`text-sm font-bold ${getStressColor(line.stress)}`}>
+                        {line.stress.toFixed(1)}%
+                      </span>
+                    </div>
+                    {line.overloadTemp && (
+                      <div className="text-xs text-muted-foreground ml-8">
+                        Overload at {line.overloadTemp.toFixed(1)}°C
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="space-y-3">
+            {stats.firstToFail.slice(0, 5).map((line, idx) => (
+              <div key={idx} className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-sm font-medium text-foreground">{line.name}</span>
+                  <span className={`text-sm font-bold ${getStressColor(line.stress)}`}>
+                    {line.stress.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Overload at {line.overloadTemp.toFixed(1)}°C
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Selected Line Details */}
