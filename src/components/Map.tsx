@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Button } from '@/components/ui/button';
-import { Layers } from 'lucide-react';
 
 interface LineData {
   id: string;
@@ -64,7 +62,6 @@ const Map = ({
   const map = useRef<mapboxgl.Map | null>(null);
   const busMarkers = useRef<mapboxgl.Marker[]>([]);
   const regionLabels = useRef<mapboxgl.Marker[]>([]);
-  const [isSatelliteView, setIsSatelliteView] = useState(false);
 
   // Provide defaults for Maps and Sets
   const _lineRegionMap = lineRegionMap || new globalThis.Map<string, string>();
@@ -141,94 +138,47 @@ const Map = ({
       data: regionsGeoJSON,
     });
 
-    // Decide placement: ensure lines appear above region fills
-    const beforeId = map.current.getLayer('transmission-lines') ? 'transmission-lines' : undefined;
-
     // Add region fill layer
-    if (beforeId) {
-      map.current.addLayer({
-        id: 'region-fills',
-        type: 'fill',
-        source: 'regions',
-        paint: {
-          'fill-color': [
-            'case',
-            ['get', 'isCut'], 'hsl(220, 15%, 35%)',
-            ['get', 'isSelected'], 'hsl(199, 89%, 48%)',
-            'hsl(199, 89%, 48%)'
-          ],
-          'fill-opacity': [
-            'case',
-            ['get', 'isCut'], 0.1,
-            ['get', 'isSelected'], 0.2,
-            showRegions ? 0.08 : 0
-          ],
-        },
-      }, beforeId);
-    } else {
-      map.current.addLayer({
-        id: 'region-fills',
-        type: 'fill',
-        source: 'regions',
-        paint: {
-          'fill-color': [
-            'case',
-            ['get', 'isCut'], 'hsl(220, 15%, 35%)',
-            ['get', 'isSelected'], 'hsl(199, 89%, 48%)',
-            'hsl(199, 89%, 48%)'
-          ],
-          'fill-opacity': [
-            'case',
-            ['get', 'isCut'], 0.1,
-            ['get', 'isSelected'], 0.2,
-            showRegions ? 0.08 : 0
-          ],
-        },
-      });
-    }
+    map.current.addLayer({
+      id: 'region-fills',
+      type: 'fill',
+      source: 'regions',
+      paint: {
+        'fill-color': [
+          'case',
+          ['get', 'isCut'], 'hsl(220, 15%, 35%)',
+          ['get', 'isSelected'], 'hsl(199, 89%, 48%)',
+          'hsl(199, 89%, 48%)'
+        ],
+        'fill-opacity': [
+          'case',
+          ['get', 'isCut'], 0.1,
+          ['get', 'isSelected'], 0.2,
+          showRegions ? 0.08 : 0
+        ],
+      },
+    }, 'transmission-lines');
 
     // Add region border layer
-    if (beforeId) {
-      map.current.addLayer({
-        id: 'region-borders',
-        type: 'line',
-        source: 'regions',
-        paint: {
-          'line-color': [
-            'case',
-            ['get', 'isCut'], 'hsl(220, 15%, 45%)',
-            ['get', 'isSelected'], 'hsl(199, 89%, 58%)',
-            'hsl(199, 89%, 48%)'
-          ],
-          'line-width': [
-            'case',
-            ['get', 'isSelected'], 2,
-            1
-          ],
-          'line-opacity': showRegions ? 0.4 : 0,
-        },
-      }, beforeId);
-    } else {
-      map.current.addLayer({
-        id: 'region-borders',
-        type: 'line',
-        source: 'regions',
-        paint: {
-          'line-color': [
-            'case',
-            ['get', 'isCut'], 'hsl(220, 15%, 45%)',
-            ['get', 'isSelected'], 'hsl(199, 89%, 58%)',
-            'hsl(199, 89%, 48%)'
-          ],
-          'line-width': [
-            'case',
-            ['get', 'isSelected'], 2,
-            1
-          ],
-          'line-opacity': showRegions ? 0.4 : 0,
-        },
-      });
-    }
+    map.current.addLayer({
+      id: 'region-borders',
+      type: 'line',
+      source: 'regions',
+      paint: {
+        'line-color': [
+          'case',
+          ['get', 'isCut'], 'hsl(220, 15%, 45%)',
+          ['get', 'isSelected'], 'hsl(199, 89%, 58%)',
+          'hsl(199, 89%, 48%)'
+        ],
+        'line-width': [
+          'case',
+          ['get', 'isSelected'], 2,
+          1
+        ],
+        'line-opacity': showRegions ? 0.4 : 0,
+      },
+    }, 'transmission-lines');
 
     // Add region click handler
     map.current.on('click', 'region-fills', (e) => {
@@ -573,43 +523,9 @@ const Map = ({
     canvas.style.cursor = outageMode ? 'crosshair' : '';
   }, [outageMode]);
 
-  // Handle satellite view toggle
-  useEffect(() => {
-    if (!map.current) return;
-    
-    const styleUrl = isSatelliteView
-      ? 'mapbox://styles/mapbox/satellite-streets-v12'
-      : 'mapbox://styles/mapbox/dark-v11';
-    
-    map.current.setStyle(styleUrl);
-    
-    const onStyleLoad = () => {
-      // Add lines first so regions can be placed beneath them
-      if (lines.length > 0) updateMapLines();
-      if (regions.length > 0) updateRegionLayers();
-      if (buses.length > 0) updateBusMarkers();
-    };
-    
-    map.current.once('style.load', onStyleLoad);
-  }, [isSatelliteView]);
-
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg overflow-hidden" />
-      
-      {/* Satellite Toggle */}
-      <div className="absolute top-4 right-4">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setIsSatelliteView(!isSatelliteView)}
-          className="shadow-lg"
-        >
-          <Layers className="mr-2 h-4 w-4" />
-          {isSatelliteView ? 'Map View' : 'Satellite'}
-        </Button>
-      </div>
-
       <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-4 py-3 space-y-3">
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Line Stress</p>
