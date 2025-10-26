@@ -528,7 +528,7 @@ const Map = ({
 
   // Handle satellite view toggle
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !map.current.isStyleLoaded()) return;
     
     const newStyle = isSatelliteView
       ? 'mapbox://styles/mapbox/satellite-streets-v12'
@@ -538,15 +538,26 @@ const Map = ({
     
     // Re-add layers after style loads
     const handleStyleLoad = () => {
-      if (regions.length > 0) {
-        updateRegionLayers();
-      }
-      updateMapLines();
-      updateBusMarkers();
+      console.log('Style loaded after toggle, re-adding layers');
+      // Wait for next tick to ensure style is fully loaded
+      setTimeout(() => {
+        if (map.current && map.current.isStyleLoaded()) {
+          console.log('Re-adding lines and regions');
+          if (regions.length > 0) {
+            updateRegionLayers();
+          }
+          if (lines.length > 0) {
+            updateMapLines();
+          }
+          if (buses.length > 0) {
+            updateBusMarkers();
+          }
+        }
+      }, 100);
     };
     
-    map.current.once('style.load', handleStyleLoad);
-  }, [isSatelliteView]);
+    map.current.once('styledata', handleStyleLoad);
+  }, [isSatelliteView, lines, buses, regions]);
 
   return (
     <div className="relative w-full h-full">
