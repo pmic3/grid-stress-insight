@@ -535,6 +535,17 @@ const Map = ({
       : 'mapbox://styles/mapbox/dark-v11';
     
     map.current.setStyle(newStyle);
+    
+    // Re-add layers after style loads
+    const handleStyleLoad = () => {
+      if (regions.length > 0) {
+        updateRegionLayers();
+      }
+      updateMapLines();
+      updateBusMarkers();
+    };
+    
+    map.current.once('style.load', handleStyleLoad);
   }, [isSatelliteView]);
 
   return (
