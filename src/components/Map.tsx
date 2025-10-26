@@ -498,7 +498,7 @@ const Map = ({
         }
       }
     }
-  }, [lines, onLineClick]); // Added onLineClick dependency to recreate handlers
+  }, [lines, onLineClick, outageMode]); // Recreate handlers when outageMode changes to prevent stale closures
 
   useEffect(() => {
     if (map.current && buses && buses.length > 0) {
