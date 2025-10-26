@@ -134,8 +134,8 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
 
     map.current.on('load', () => {
       console.log('Map loaded');
-      addRegionLayers();
       updateMapLines();
+      addRegionLayers();
       if (buses.length > 0) {
         console.log('Adding initial bus markers');
         updateBusMarkers();
@@ -176,7 +176,7 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
           'fill-color': ['get', 'color'],
           'fill-opacity': showRegions ? 1 : 0
         }
-      }, 'transmission-lines'); // Add below transmission lines
+      });
 
       map.current.addLayer({
         id: 'region-borders',
