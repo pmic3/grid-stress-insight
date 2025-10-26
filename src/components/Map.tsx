@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { Button } from '@/components/ui/button';
+import { Layers } from 'lucide-react';
 
 interface LineData {
   id: string;
@@ -62,6 +64,7 @@ const Map = ({
   const map = useRef<mapboxgl.Map | null>(null);
   const busMarkers = useRef<mapboxgl.Marker[]>([]);
   const regionLabels = useRef<mapboxgl.Marker[]>([]);
+  const [isSatelliteView, setIsSatelliteView] = useState(false);
 
   // Provide defaults for Maps and Sets
   const _lineRegionMap = lineRegionMap || new globalThis.Map<string, string>();
@@ -523,9 +526,34 @@ const Map = ({
     canvas.style.cursor = outageMode ? 'crosshair' : '';
   }, [outageMode]);
 
+  // Handle satellite view toggle
+  useEffect(() => {
+    if (!map.current) return;
+    
+    const newStyle = isSatelliteView
+      ? 'mapbox://styles/mapbox/satellite-streets-v12'
+      : 'mapbox://styles/mapbox/dark-v11';
+    
+    map.current.setStyle(newStyle);
+  }, [isSatelliteView]);
+
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg overflow-hidden" />
+      
+      {/* Satellite Toggle */}
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setIsSatelliteView(!isSatelliteView)}
+          className="shadow-lg"
+        >
+          <Layers className="mr-2 h-4 w-4" />
+          {isSatelliteView ? 'Map View' : 'Satellite'}
+        </Button>
+      </div>
+
       <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-4 py-3 space-y-3">
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Line Stress</p>
