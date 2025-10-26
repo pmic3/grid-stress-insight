@@ -4,12 +4,14 @@ import ControlPanel from '@/components/ControlPanel';
 import StatsPanel from '@/components/StatsPanel';
 import BusDetailsDrawer from '@/components/BusDetailsDrawer';
 import OutageControls from '@/components/OutageControls';
+import RegionControls from '@/components/RegionControls';
 import { ForecastAlertsCard } from '@/components/ForecastAlertsCard';
 import { ForecastAlertsDrawer } from '@/components/ForecastAlertsDrawer';
 import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { OutageSimulator } from '@/utils/outageSimulation';
+import { assignBusesToRegions, assignLinesToRegions } from '@/utils/regionUtils';
 
 // Mock data for initial display
 const mockLines = [
@@ -87,8 +89,16 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [outageMode, setOutageMode] = useState(false);
   const [cutLines, setCutLines] = useState<string[]>([]);
+  const [cutRegions, setCutRegions] = useState<Set<string>>(new Set());
   const [baseStress, setBaseStress] = useState<Record<string, number>>({});
   const [mode, setMode] = useState<'manual' | 'current' | 'forecast'>('manual');
+  
+  // Region state
+  const [regions, setRegions] = useState<any[]>([]);
+  const [busRegionMap, setBusRegionMap] = useState<globalThis.Map<string, string>>(new globalThis.Map());
+  const [lineRegionMap, setLineRegionMap] = useState<globalThis.Map<string, string>>(new globalThis.Map());
+  const [showRegions, setShowRegions] = useState(true);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [weatherData, setWeatherData] = useState<{
     tempC: number;
     windMS: number;
@@ -106,7 +116,7 @@ const Index = () => {
   
   const { toast } = useToast();
 
-  // Load GeoJSON and buses on mount
+  // Load GeoJSON, buses, and regions on mount
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -145,6 +155,18 @@ const Index = () => {
         } else {
           console.warn('No buses data in response');
         }
+
+        // Load regions
+        const regionsResponse = await fetch('/data/regions.geojson');
+        const regionsData = await regionsResponse.json();
+        if (regionsData?.features) {
+          const regionFeatures = regionsData.features.map((f: any) => ({
+            id: f.properties.id,
+            name: f.properties.name,
+            geometry: f.geometry,
+          }));
+          setRegions(regionFeatures);
+        }
       } catch (error) {
         console.error('Error loading grid data:', error);
         toast({
@@ -157,6 +179,20 @@ const Index = () => {
 
     loadData();
   }, []);
+
+  // Assign buses and lines to regions when data is loaded
+  useEffect(() => {
+    if (buses.length > 0 && regions.length > 0 && lines.length > 0) {
+      const busRegions = assignBusesToRegions(buses, regions);
+      const lineRegions = assignLinesToRegions(lines, buses, busRegions);
+      setBusRegionMap(busRegions);
+      setLineRegionMap(lineRegions);
+      console.log('Region assignments:', {
+        busesAssigned: busRegions.size,
+        linesAssigned: lineRegions.size,
+      });
+    }
+  }, [buses.length, regions.length, lines.length]);
 
   // Fetch weather when entering Current mode
   const fetchWeather = async () => {
@@ -550,10 +586,60 @@ const Index = () => {
 
   const handleRestoreAll = () => {
     setCutLines([]);
+    setCutRegions(new Set());
     toast({
       title: 'All Lines Restored',
       description: 'Grid restored to normal operation',
     });
+  };
+
+  const handleRegionCut = (regionId: string) => {
+    // Find all lines in this region
+    const regionLineIds = lines
+      .filter(line => lineRegionMap.get(line.id) === regionId)
+      .map(line => line.id);
+    
+    setCutLines(prev => [...new Set([...prev, ...regionLineIds])]);
+    setCutRegions(prev => new Set([...prev, regionId]));
+    
+    toast({
+      title: 'Region Cut',
+      description: `All lines in ${regions.find(r => r.id === regionId)?.name} marked as out-of-service`,
+      variant: 'destructive',
+    });
+  };
+
+  const handleRegionRestore = (regionId: string) => {
+    // Find all lines in this region
+    const regionLineIds = lines
+      .filter(line => lineRegionMap.get(line.id) === regionId)
+      .map(line => line.id);
+    
+    setCutLines(prev => prev.filter(id => !regionLineIds.includes(id)));
+    setCutRegions(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(regionId);
+      return newSet;
+    });
+    
+    toast({
+      title: 'Region Restored',
+      description: `${regions.find(r => r.id === regionId)?.name} is back in service`,
+    });
+  };
+
+  const handleRegionClick = (regionId: string) => {
+    if (!outageMode) {
+      setSelectedRegion(prev => prev === regionId ? null : regionId);
+      return;
+    }
+    
+    // In outage mode, toggle region cut status
+    if (cutRegions.has(regionId)) {
+      handleRegionRestore(regionId);
+    } else {
+      handleRegionCut(regionId);
+    }
   };
 
   return (
@@ -610,6 +696,19 @@ const Index = () => {
                 cutLinesCount={cutLines.length}
                 onRestoreAll={handleRestoreAll}
               />
+              <RegionControls
+                regions={regions}
+                lines={adjustedLines}
+                lineRegionMap={lineRegionMap}
+                cutRegions={cutRegions}
+                onRegionCut={handleRegionCut}
+                onRegionRestore={handleRegionRestore}
+                showRegions={showRegions}
+                onToggleRegions={() => setShowRegions(!showRegions)}
+                selectedRegion={selectedRegion}
+                onSelectRegion={setSelectedRegion}
+                outageMode={outageMode}
+              />
             </div>
 
             {/* Map */}
@@ -617,10 +716,16 @@ const Index = () => {
               <Map 
                 lines={adjustedLines} 
                 buses={buses}
+                regions={regions}
+                lineRegionMap={lineRegionMap}
+                cutRegions={cutRegions}
                 onLineClick={handleLineClick}
                 onBusClick={handleBusClick}
+                onRegionClick={handleRegionClick}
                 cutLines={cutLinesSet}
                 outageMode={outageMode}
+                showRegions={showRegions}
+                selectedRegion={selectedRegion}
               />
               <BusDetailsDrawer 
                 bus={selectedBus} 

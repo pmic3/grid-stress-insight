@@ -1,0 +1,95 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "HONOLULU",
+      "properties": {
+        "id": "HONOLULU",
+        "name": "Central Honolulu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-157.90, 21.25],
+          [-157.75, 21.25],
+          [-157.75, 21.35],
+          [-157.90, 21.35],
+          [-157.90, 21.25]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "LEEWARD",
+      "properties": {
+        "id": "LEEWARD",
+        "name": "Leeward"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-158.25, 21.25],
+          [-157.90, 21.25],
+          [-157.90, 21.45],
+          [-158.25, 21.45],
+          [-158.25, 21.25]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "WINDWARD",
+      "properties": {
+        "id": "WINDWARD",
+        "name": "Windward"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-157.75, 21.30],
+          [-157.65, 21.30],
+          [-157.65, 21.50],
+          [-157.75, 21.50],
+          [-157.75, 21.30]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NORTH_SHORE",
+      "properties": {
+        "id": "NORTH_SHORE",
+        "name": "North Shore"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-158.15, 21.50],
+          [-157.85, 21.50],
+          [-157.85, 21.70],
+          [-158.15, 21.70],
+          [-158.15, 21.50]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "CENTRAL_UPLANDS",
+      "properties": {
+        "id": "CENTRAL_UPLANDS",
+        "name": "Central Uplands"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-158.05, 21.42],
+          [-157.90, 21.42],
+          [-157.90, 21.52],
+          [-158.05, 21.52],
+          [-158.05, 21.42]
+        ]]
+      }
+    }
+  ]
+}

@@ -21,21 +21,52 @@ interface BusData {
   degree: number;
 }
 
+interface Region {
+  id: string;
+  name: string;
+  geometry: any;
+}
+
 interface MapProps {
   lines: LineData[];
   buses: BusData[];
+  regions?: Region[];
+  lineRegionMap?: Map<string, string>;
+  cutRegions?: Set<string>;
   onLineClick?: (line: LineData) => void;
   onBusClick?: (bus: BusData, connectedLines: any[]) => void;
+  onRegionClick?: (regionId: string) => void;
   cutLines?: Set<string>;
   outageMode?: boolean;
+  showRegions?: boolean;
+  selectedRegion?: string | null;
 }
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoicG1pY29uaSIsImEiOiJjbWNiMGJiMzUwOHY0MmxwejJhazhjcTd6In0.pNow26taTw3mku-wCPQCwA';
 
-const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outageMode = false }: MapProps) => {
+const Map = ({ 
+  lines, 
+  buses, 
+  regions = [], 
+  lineRegionMap,
+  cutRegions,
+  onLineClick, 
+  onBusClick, 
+  onRegionClick,
+  cutLines, 
+  outageMode = false,
+  showRegions = true,
+  selectedRegion = null,
+}: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const busMarkers = useRef<mapboxgl.Marker[]>([]);
+  const regionLabels = useRef<mapboxgl.Marker[]>([]);
+
+  // Provide defaults for Maps and Sets
+  const _lineRegionMap = lineRegionMap || new globalThis.Map<string, string>();
+  const _cutRegions = cutRegions || new globalThis.Set<string>();
+  const _cutLines = cutLines || new globalThis.Set<string>();
 
   const initializeMap = () => {
     if (!mapContainer.current || map.current) return;
@@ -54,12 +85,149 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
 
     map.current.on('load', () => {
       console.log('Map loaded');
+      if (regions.length > 0) {
+        updateRegionLayers();
+      }
       updateMapLines();
       if (buses.length > 0) {
         console.log('Adding initial bus markers');
         updateBusMarkers();
       }
     });
+  };
+
+  const updateRegionLayers = () => {
+    if (!map.current || !map.current.isStyleLoaded() || regions.length === 0) return;
+
+    // Remove existing region layers
+    if (map.current.getLayer('region-fills')) map.current.removeLayer('region-fills');
+    if (map.current.getLayer('region-borders')) map.current.removeLayer('region-borders');
+    if (map.current.getSource('regions')) map.current.removeSource('regions');
+
+    // Clear existing labels
+    regionLabels.current.forEach(marker => marker.remove());
+    regionLabels.current = [];
+
+    // Create GeoJSON for regions
+    const regionsGeoJSON: GeoJSON.FeatureCollection = {
+      type: 'FeatureCollection',
+      features: regions.map(region => ({
+        type: 'Feature',
+        properties: {
+          id: region.id,
+          name: region.name,
+          isCut: _cutRegions.has(region.id),
+          isSelected: selectedRegion === region.id,
+        },
+        geometry: region.geometry,
+      })),
+    };
+
+    map.current.addSource('regions', {
+      type: 'geojson',
+      data: regionsGeoJSON,
+    });
+
+    // Add region fill layer
+    map.current.addLayer({
+      id: 'region-fills',
+      type: 'fill',
+      source: 'regions',
+      paint: {
+        'fill-color': [
+          'case',
+          ['get', 'isCut'], 'hsl(220, 15%, 35%)',
+          ['get', 'isSelected'], 'hsl(199, 89%, 48%)',
+          'hsl(199, 89%, 48%)'
+        ],
+        'fill-opacity': [
+          'case',
+          ['get', 'isCut'], 0.1,
+          ['get', 'isSelected'], 0.2,
+          showRegions ? 0.08 : 0
+        ],
+      },
+    }, 'transmission-lines');
+
+    // Add region border layer
+    map.current.addLayer({
+      id: 'region-borders',
+      type: 'line',
+      source: 'regions',
+      paint: {
+        'line-color': [
+          'case',
+          ['get', 'isCut'], 'hsl(220, 15%, 45%)',
+          ['get', 'isSelected'], 'hsl(199, 89%, 58%)',
+          'hsl(199, 89%, 48%)'
+        ],
+        'line-width': [
+          'case',
+          ['get', 'isSelected'], 2,
+          1
+        ],
+        'line-opacity': showRegions ? 0.4 : 0,
+      },
+    }, 'transmission-lines');
+
+    // Add region click handler
+    map.current.on('click', 'region-fills', (e) => {
+      if (e.features && e.features[0] && onRegionClick) {
+        const regionId = e.features[0].properties?.id;
+        if (regionId) {
+          onRegionClick(regionId);
+        }
+      }
+    });
+
+    // Change cursor on region hover
+    map.current.on('mouseenter', 'region-fills', () => {
+      if (map.current) {
+        map.current.getCanvas().style.cursor = 'pointer';
+      }
+    });
+
+    map.current.on('mouseleave', 'region-fills', () => {
+      if (map.current && !outageMode) {
+        map.current.getCanvas().style.cursor = '';
+      }
+    });
+
+    // Add region labels
+    if (showRegions) {
+      regions.forEach(region => {
+        const coords = region.geometry.coordinates[0];
+        const centroid = coords.reduce(
+          (acc: [number, number], coord: number[]) => [
+            acc[0] + coord[0] / coords.length,
+            acc[1] + coord[1] / coords.length,
+          ],
+          [0, 0]
+        );
+
+        const el = document.createElement('div');
+        el.className = 'region-label';
+        el.textContent = region.name;
+        el.style.cssText = `
+          background: hsl(var(--card) / 0.9);
+          color: hsl(var(--foreground));
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 600;
+          border: 1px solid hsl(var(--border));
+          backdrop-filter: blur(4px);
+          pointer-events: none;
+          white-space: nowrap;
+        `;
+
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat(centroid as [number, number])
+          .addTo(map.current!);
+
+        regionLabels.current.push(marker);
+      });
+    }
   };
 
   const getLineColor = (stress: number) => {
@@ -284,10 +452,18 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
 
     return () => {
       busMarkers.current.forEach(marker => marker.remove());
+      regionLabels.current.forEach(marker => marker.remove());
       map.current?.remove();
       map.current = null;
     };
   }, []);
+
+  // Update regions when data changes
+  useEffect(() => {
+    if (map.current && map.current.isStyleLoaded() && regions.length > 0) {
+      updateRegionLayers();
+    }
+  }, [regions, _cutRegions, showRegions, selectedRegion]);
 
   useEffect(() => {
     if (map.current && map.current.isStyleLoaded()) {
