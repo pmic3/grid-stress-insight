@@ -4,6 +4,8 @@ import ControlPanel from '@/components/ControlPanel';
 import StatsPanel from '@/components/StatsPanel';
 import BusDetailsDrawer from '@/components/BusDetailsDrawer';
 import OutageControls from '@/components/OutageControls';
+import { ForecastAlertsCard } from '@/components/ForecastAlertsCard';
+import { ForecastAlertsDrawer } from '@/components/ForecastAlertsDrawer';
 import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,7 +88,7 @@ const Index = () => {
   const [outageMode, setOutageMode] = useState(false);
   const [cutLines, setCutLines] = useState<string[]>([]);
   const [baseStress, setBaseStress] = useState<Record<string, number>>({});
-  const [mode, setMode] = useState<'manual' | 'current'>('manual');
+  const [mode, setMode] = useState<'manual' | 'current' | 'forecast'>('manual');
   const [weatherData, setWeatherData] = useState<{
     tempC: number;
     windMS: number;
@@ -94,6 +96,14 @@ const Index = () => {
     asOf: string;
   } | null>(null);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+  
+  // Forecast state
+  const [forecastData, setForecastData] = useState<any>(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+  const [forecastDrawerOpen, setForecastDrawerOpen] = useState(false);
+  const [selectedForecastHour, setSelectedForecastHour] = useState<any>(null);
+  const [forecastPreviewActive, setForecastPreviewActive] = useState(false);
+  
   const { toast } = useToast();
 
   // Load GeoJSON and buses on mount
@@ -185,17 +195,132 @@ const Index = () => {
     }
   }, [mode]);
 
-  const handleModeChange = (newMode: 'manual' | 'current') => {
+  const handleModeChange = (newMode: 'manual' | 'current' | 'forecast') => {
     setMode(newMode);
     if (newMode === 'manual') {
       setWeatherData(null);
     }
+    if (newMode === 'forecast') {
+      fetchForecast();
+    }
+    // Reset forecast preview when switching modes
+    setForecastPreviewActive(false);
+    setSelectedForecastHour(null);
+  };
+  
+  // Fetch forecast data
+  const fetchForecast = async () => {
+    try {
+      setForecastLoading(true);
+      const { data, error } = await supabase.functions.invoke('forecast-analyze', {
+        body: { scenario },
+      });
+      
+      if (error) throw error;
+      setForecastData(data);
+    } catch (error) {
+      console.error('Error fetching forecast:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch forecast',
+        variant: 'destructive',
+      });
+    } finally {
+      setForecastLoading(false);
+    }
+  };
+  
+  // Auto-refresh forecast every 10 minutes when in forecast mode
+  useEffect(() => {
+    if (mode !== 'forecast') return;
+    
+    fetchForecast();
+    const interval = setInterval(fetchForecast, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [mode, scenario]);
+  
+  // Handle forecast hour preview
+  const handlePreviewForecastHour = async (hour: any) => {
+    setSelectedForecastHour(hour);
+    setForecastPreviewActive(true);
+    
+    // Compute ratings for this specific hour
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('compute-ratings', {
+        body: {
+          tempC: hour.tempC,
+          windMS: hour.windMS,
+          windDeg: hour.windDeg,
+          scenario,
+        },
+      });
+      
+      if (error) throw error;
+      
+      // Update lines with forecast data
+      const stressById: Record<string, any> = {};
+      data.lines.forEach((line: any) => {
+        stressById[line.id] = {
+          stress: line.stressPct,
+          rating: line.ratingA,
+          actual: line.actualA,
+          overloadTemp: line.overloadTemp,
+        };
+      });
+
+      setLines(prevLines => prevLines.map(line => ({
+        ...line,
+        stress: stressById[line.id]?.stress || 0,
+        rating: stressById[line.id]?.rating || 0,
+        actual: stressById[line.id]?.actual || 0,
+        overloadTemp: stressById[line.id]?.overloadTemp || 30,
+      })));
+      
+      if (data.system) {
+        const topLines = data.lines
+          .sort((a: any, b: any) => b.stressPct - a.stressPct)
+          .slice(0, 3);
+
+        setStats({
+          systemStressIndex: data.system.ssi,
+          stressBands: data.system.bands,
+          avgStress: data.system.avgStress,
+          maxStress: data.system.maxStress,
+          firstToFail: topLines.map((line: any) => ({
+            name: line.name,
+            overloadTemp: line.overloadTemp || 30,
+            stress: line.stressPct,
+          })),
+        });
+      }
+    } catch (error) {
+      console.error('Error computing forecast ratings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to compute forecast ratings',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleBackToLive = () => {
+    setForecastPreviewActive(false);
+    setSelectedForecastHour(null);
+    // Re-trigger current ratings computation
+    if (mode === 'current' && weatherData) {
+      setTemperature(weatherData.tempC);
+      setWindSpeed(weatherData.windMS);
+      setWindDirection(weatherData.windDeg);
+    }
   };
 
 
-  // Fetch and compute ratings when environmental params change
+  // Fetch and compute ratings when environmental params change (but not in forecast preview mode)
   useEffect(() => {
-    if (lines.length === 0) return;
+    if (lines.length === 0 || forecastPreviewActive) return;
 
     const computeRatings = async () => {
       setIsLoading(true);
@@ -504,8 +629,17 @@ const Index = () => {
             </div>
 
             {/* Stats Panel */}
-            <div className="lg:col-span-3 overflow-y-auto">
+            <div className="lg:col-span-3 overflow-y-auto space-y-4">
               <StatsPanel stats={adjustedStats} selectedLine={selectedLine} />
+              
+              {mode === 'forecast' && (
+                <ForecastAlertsCard
+                  data={forecastData}
+                  loading={forecastLoading}
+                  onViewDetails={() => setForecastDrawerOpen(true)}
+                  onRefresh={fetchForecast}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -519,6 +653,15 @@ const Index = () => {
           </div>
         </footer>
       </div>
+      
+      <ForecastAlertsDrawer
+        open={forecastDrawerOpen}
+        onOpenChange={setForecastDrawerOpen}
+        data={forecastData}
+        onPreviewHour={handlePreviewForecastHour}
+        onBackToLive={handleBackToLive}
+        selectedHour={selectedForecastHour}
+      />
     </div>
   );
 };

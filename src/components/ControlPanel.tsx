@@ -11,7 +11,7 @@ interface ControlPanelProps {
   windSpeed: number;
   windDirection: number;
   scenario: 'min' | 'nominal' | 'max';
-  mode: 'manual' | 'current';
+  mode: 'manual' | 'current' | 'forecast';
   weatherData: {
     tempC: number;
     windMS: number;
@@ -23,7 +23,7 @@ interface ControlPanelProps {
   onWindSpeedChange: (value: number) => void;
   onWindDirectionChange: (value: number) => void;
   onScenarioChange: (scenario: 'min' | 'nominal' | 'max') => void;
-  onModeChange: (mode: 'manual' | 'current') => void;
+  onModeChange: (mode: 'manual' | 'current' | 'forecast') => void;
   onRefreshWeather: () => void;
 }
 
@@ -70,8 +70,8 @@ const ControlPanel = ({
       {/* Mode Selector */}
       <div className="space-y-3 pb-4 border-b border-border">
         <Label className="text-foreground">Control Mode</Label>
-        <Tabs value={mode} onValueChange={(v) => onModeChange(v as 'manual' | 'current')}>
-          <TabsList className="grid w-full grid-cols-2 bg-muted">
+        <Tabs value={mode} onValueChange={(v) => onModeChange(v as 'manual' | 'current' | 'forecast')}>
+          <TabsList className="grid w-full grid-cols-3 bg-muted">
             <TabsTrigger value="manual" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Thermometer className="w-4 h-4 mr-2" />
               Manual
@@ -79,6 +79,10 @@ const ControlPanel = ({
             <TabsTrigger value="current" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Cloud className="w-4 h-4 mr-2" />
               Current
+            </TabsTrigger>
+            <TabsTrigger value="forecast" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Wind className="w-4 h-4 mr-2" />
+              Forecast
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -123,6 +127,17 @@ const ControlPanel = ({
                 Fetching weather data...
               </div>
             )}
+          </div>
+        </Card>
+      )}
+      
+      {/* Forecast Mode Display */}
+      {mode === 'forecast' && (
+        <Card className="p-4 bg-primary/10 border-primary/20">
+          <div className="text-center py-4 text-muted-foreground">
+            <p className="text-sm">
+              Forecast mode active. View the Forecast Alerts panel for 24-hour predictions.
+            </p>
           </div>
         </Card>
       )}
