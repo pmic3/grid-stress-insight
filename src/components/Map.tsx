@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Button } from './ui/button';
-import { Eye, EyeOff } from 'lucide-react';
 
 interface LineData {
   id: string;
@@ -38,84 +36,6 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const busMarkers = useRef<mapboxgl.Marker[]>([]);
-  const [showRegions, setShowRegions] = useState(true);
-
-  // Define Oʻahu regions with approximate boundaries
-  const regions = {
-    type: 'FeatureCollection' as const,
-    features: [
-      {
-        type: 'Feature' as const,
-        properties: { name: 'Central Honolulu', color: 'rgba(59, 130, 246, 0.15)' },
-        geometry: {
-          type: 'Polygon' as const,
-          coordinates: [[
-            [-157.95, 21.25],
-            [-157.78, 21.25],
-            [-157.78, 21.38],
-            [-157.95, 21.38],
-            [-157.95, 21.25]
-          ]]
-        }
-      },
-      {
-        type: 'Feature' as const,
-        properties: { name: 'Leeward', color: 'rgba(168, 85, 247, 0.15)' },
-        geometry: {
-          type: 'Polygon' as const,
-          coordinates: [[
-            [-158.22, 21.28],
-            [-157.95, 21.28],
-            [-157.95, 21.48],
-            [-158.22, 21.48],
-            [-158.22, 21.28]
-          ]]
-        }
-      },
-      {
-        type: 'Feature' as const,
-        properties: { name: 'Windward', color: 'rgba(34, 197, 94, 0.15)' },
-        geometry: {
-          type: 'Polygon' as const,
-          coordinates: [[
-            [-157.78, 21.25],
-            [-157.65, 21.25],
-            [-157.65, 21.46],
-            [-157.78, 21.46],
-            [-157.78, 21.25]
-          ]]
-        }
-      },
-      {
-        type: 'Feature' as const,
-        properties: { name: 'North Shore', color: 'rgba(249, 115, 22, 0.15)' },
-        geometry: {
-          type: 'Polygon' as const,
-          coordinates: [[
-            [-158.22, 21.53],
-            [-157.88, 21.53],
-            [-157.88, 21.68],
-            [-158.22, 21.68],
-            [-158.22, 21.53]
-          ]]
-        }
-      },
-      {
-        type: 'Feature' as const,
-        properties: { name: 'Central Uplands', color: 'rgba(236, 72, 153, 0.15)' },
-        geometry: {
-          type: 'Polygon' as const,
-          coordinates: [[
-            [-158.10, 21.46],
-            [-157.88, 21.46],
-            [-157.88, 21.58],
-            [-158.10, 21.58],
-            [-158.10, 21.46]
-          ]]
-        }
-      }
-    ]
-  };
 
   const initializeMap = () => {
     if (!mapContainer.current || map.current) return;
@@ -135,7 +55,6 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
     map.current.on('load', () => {
       console.log('Map loaded');
       updateMapLines();
-      addRegionLayers();
       if (buses.length > 0) {
         console.log('Adding initial bus markers');
         updateBusMarkers();
@@ -156,85 +75,6 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
     if (voltage <= 115) return '#bebada';
     if (voltage <= 230) return '#fb8072';
     return '#fdb462';
-  };
-
-  const addRegionLayers = () => {
-    if (!map.current || !map.current.isStyleLoaded()) return;
-
-    // Add region polygons
-    if (!map.current.getSource('regions')) {
-      map.current.addSource('regions', {
-        type: 'geojson',
-        data: regions
-      });
-
-      // Add layers before transmission-lines so they appear underneath
-      const beforeLayer = map.current.getLayer('transmission-lines') ? 'transmission-lines' : undefined;
-
-      map.current.addLayer({
-        id: 'region-fills',
-        type: 'fill',
-        source: 'regions',
-        paint: {
-          'fill-color': ['get', 'color'],
-          'fill-opacity': showRegions ? 1 : 0
-        }
-      }, beforeLayer);
-
-      map.current.addLayer({
-        id: 'region-borders',
-        type: 'line',
-        source: 'regions',
-        paint: {
-          'line-color': '#ffffff',
-          'line-width': 2,
-          'line-opacity': showRegions ? 0.3 : 0,
-          'line-dasharray': [3, 2]
-        }
-      }, beforeLayer);
-
-      // Add region labels
-      regions.features.forEach((feature, index) => {
-        const coords = feature.geometry.coordinates[0];
-        const centerLng = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
-        const centerLat = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
-
-        const el = document.createElement('div');
-        el.className = 'region-label';
-        el.style.cssText = `
-          color: white;
-          font-size: 14px;
-          font-weight: 600;
-          padding: 4px 8px;
-          background: rgba(0, 0, 0, 0.6);
-          border-radius: 4px;
-          pointer-events: none;
-          white-space: nowrap;
-          opacity: ${showRegions ? '1' : '0'};
-          transition: opacity 0.3s;
-        `;
-        el.textContent = feature.properties.name;
-
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([centerLng, centerLat])
-          .addTo(map.current!);
-
-        busMarkers.current.push(marker);
-      });
-    }
-  };
-
-  const toggleRegions = () => {
-    setShowRegions(!showRegions);
-    if (map.current && map.current.getLayer('region-fills')) {
-      map.current.setPaintProperty('region-fills', 'fill-opacity', !showRegions ? 1 : 0);
-      map.current.setPaintProperty('region-borders', 'line-opacity', !showRegions ? 0.3 : 0);
-      
-      // Update label opacity
-      document.querySelectorAll('.region-label').forEach((el) => {
-        (el as HTMLElement).style.opacity = !showRegions ? '1' : '0';
-      });
-    }
   };
 
   const updateMapLines = () => {
@@ -500,20 +340,6 @@ const Map = ({ lines, buses, onLineClick, onBusClick, cutLines = new Set(), outa
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg overflow-hidden" />
-      
-      {/* Region Toggle Button */}
-      <div className="absolute top-4 right-16 z-10">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleRegions}
-          className="bg-card/90 backdrop-blur-sm"
-        >
-          {showRegions ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-          {showRegions ? 'Hide' : 'Show'} Regions
-        </Button>
-      </div>
-
       <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-4 py-3 space-y-3">
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Line Stress</p>
