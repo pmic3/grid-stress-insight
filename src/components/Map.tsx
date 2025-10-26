@@ -329,6 +329,7 @@ const Map = ({
     });
 
     // Add click handler (fresh closure with current props)
+    // Only allow interaction if outageMode is active OR if clicking for details
     map.current.on('click', 'transmission-lines', (e) => {
       if (e.features && e.features[0] && onLineClick) {
         const feature = e.features[0];
@@ -343,12 +344,16 @@ const Map = ({
     // Change cursor on hover based on mode
     map.current.on('mouseenter', 'transmission-lines', () => {
       if (map.current) {
+        // Show crosshair in outage mode, pointer in normal mode for info
         map.current.getCanvas().style.cursor = outageMode ? 'crosshair' : 'pointer';
       }
     });
 
     map.current.on('mouseleave', 'transmission-lines', () => {
-      if (map.current) map.current.getCanvas().style.cursor = '';
+      if (map.current) {
+        // Reset to default cursor (empty string = default)
+        map.current.getCanvas().style.cursor = outageMode ? 'crosshair' : '';
+      }
     });
   };
 

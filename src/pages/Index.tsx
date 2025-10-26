@@ -515,7 +515,7 @@ const Index = () => {
   const handleLineClick = (line: any) => {
     console.log('handleLineClick called:', { lineId: line.id, outageMode });
     
-    // If in outage mode, toggle line cut status
+    // GATE: Only allow cut/restore actions in outage mode
     if (outageMode) {
       console.log('Outage mode active, toggling line:', line.id);
       setCutLines(prev => {
@@ -535,11 +535,11 @@ const Index = () => {
           return [...prev, line.id];
         }
       });
-      return;
+      return; // Exit early - no other actions in outage mode
     }
 
     console.log('Normal mode, showing line details');
-    // Normal line selection for details
+    // In non-outage modes: show line details only (no cut/restore)
     setSelectedLine({
       name: line.name,
       rating: line.rating,
@@ -552,6 +552,7 @@ const Index = () => {
     });
     setSelectedBus(null);
     
+    // Show info toast (not cut/restore)
     toast({
       title: line.name,
       description: `Stress: ${line.stress.toFixed(1)}% | Rating: ${line.rating}A`,
